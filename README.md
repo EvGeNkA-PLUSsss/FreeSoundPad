@@ -199,4 +199,14 @@ dist\FreeSoundPad.exe --selftest
 
 ## Лицензия
 
-Проект собран как локальное приложение; сторонние компоненты — под их лицензиями (NAudio — MIT, WebView2 — Microsoft, CommunityToolkit.Mvvm — MIT). Своей лицензии пока нет — используйте на свой страх и риск.
+FreeSoundPad распространяется под **GNU Affero General Public License v3.0** (`AGPL-3.0-only`).
+
+Полный текст лицензии — в файле [`LICENSE`](LICENSE).
+
+Copyright (C) 2026 **EvGeNkA-PLUSsss**.
+
+Исходный код: https://github.com/EvGeNkA-PLUSsss/FreeSoundPad
+
+Если вы изменяете FreeSoundPad и предоставляете к нему сетевой доступ, AGPL-3.0 требует предоставить пользователям соответствующее исходное состояние вашей версии.
+
+Сторонние компоненты распространяются под своими лицензиями: NAudio — MIT, WebView2 — Microsoft, CommunityToolkit.Mvvm — MIT.
