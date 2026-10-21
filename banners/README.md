@@ -2,7 +2,7 @@
 
 ## Files
 
-- `freesoundpad-telegram-1280x640.png` — готовый баннер для Telegram-канала (1280×640).
+- `baner.png` — готовый баннер для Telegram-канала (1280×640).
 - `freesoundpad-telegram-2x.png` — исходник 2560×1280 для Retina/пережатия.
 - `DESIGN.md` — визуальная философия «Signal Brutalism».
 - `src/banner.html` — исходник композиции.
