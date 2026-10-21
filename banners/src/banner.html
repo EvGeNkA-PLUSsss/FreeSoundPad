@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>FreeSoundPad — Telegram banner</title>
+<style>
+    @font-face {
+        font-family: "Tektur";
+        src: url("../fonts/Tektur-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: "Tektur";
+        src: url("../fonts/Tektur-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: "Jura";
+        src: url("../fonts/Jura-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: "JBMono";
+        src: url("../fonts/JetBrainsMono-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: "JBMono";
+        src: url("../fonts/JetBrainsMono-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    :root {
+        --bg: #05080d;
+        --panel: #09111a;
+        --panel-2: #0d1823;
+        --ink: #e9f1f9;
+        --soft: #b4c1d0;
+        --muted: #718195;
+        --mint: #48e0ae;
+        --mint-bright: #7af4ca;
+        --blue: #6fa9ff;
+        --amber: #f2c05e;
+        --violet: #9c8cff;
+        --line: rgba(205, 226, 250, .14);
+        --line-soft: rgba(205, 226, 250, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Jura", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+    }
+
+    .banner {
+        position: relative;
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+            radial-gradient(ellipse 62% 95% at 86% 4%, rgba(72, 224, 174, .17), transparent 65%),
+            radial-gradient(ellipse 50% 70% at 2% 100%, rgba(111, 169, 255, .09), transparent 70%),
+            linear-gradient(112deg, #04070c 0%, #060b12 55%, #050a10 100%);
+    }
+
+    .banner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background-image:
+            linear-gradient(rgba(205, 226, 250, .05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(205, 226, 250, .05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        mask-image: linear-gradient(105deg, rgba(0,0,0,.65), transparent 65%);
+    }
+
+    .banner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0 3px,
+            rgba(255, 255, 255, .012) 3px 4px
+        );
+        mix-blend-mode: screen;
+    }
+
+    .orbit {
+        position: absolute;
+        z-index: -1;
+        width: 700px;
+        height: 700px;
+        right: 18px;
+        top: -160px;
+        border: 1px solid rgba(72, 224, 174, .10);
+        border-radius: 50%;
+        box-shadow: inset 0 0 120px rgba(72, 224, 174, .035);
+    }
+
+    .orbit::before,
+    .orbit::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(72, 224, 174, .065);
+    }
+
+    .orbit::before { inset: 52px; }
+    .orbit::after { inset: 130px; border-color: rgba(205, 226, 250, .055); }
+
+    .trace {
+        position: absolute;
+        inset: 0;
+        width: 1280px;
+        height: 640px;
+        z-index: -1;
+        pointer-events: none;
+        opacity: .52;
+    }
+
+    /* ---------- brand ---------- */
+
+    .brand {
+        position: absolute;
+        left: 72px;
+        top: 46px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .brand img {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        box-shadow: 0 0 0 1px rgba(72, 224, 174, .34), 0 10px 26px -12px rgba(72, 224, 174, .55);
+    }
+
+    .brand-copy {
+        display: grid;
+        line-height: 1;
+    }
+
+    .brand-copy strong {
+        font-family: "Tektur", sans-serif;
+        font-size: 25px;
+        font-weight: 500;
+        letter-spacing: -.03em;
+    }
+
+    .brand-copy span {
+        margin-top: 7px;
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 8px;
+        font-weight: 400;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+    }
+
+    .top-meta {
+        position: absolute;
+        right: 72px;
+        top: 56px;
+        display: flex;
+        align-items: center;
+        gap: 19px;
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .top-meta .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--mint);
+    }
+
+    .top-meta .live i {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 12px rgba(72, 224, 174, .9);
+    }
+
+    .top-meta .rule {
+        width: 1px;
+        height: 13px;
+        background: var(--line);
+    }
+
+    /* ---------- copy ---------- */
+
+    .copy {
+        position: absolute;
+        left: 72px;
+        top: 162px;
+        width: 650px;
+    }
+
+    .kicker {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+        color: var(--mint);
+        font-family: "JBMono", monospace;
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+    }
+
+    .kicker .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 10px rgba(72, 224, 174, .9);
+    }
+
+    .kicker .slash {
+        color: rgba(72, 224, 174, .4);
+    }
+
+    h1 {
+        margin: 0;
+        font-family: "Tektur", sans-serif;
+        font-size: 65px;
+        font-weight: 500;
+        line-height: .93;
+        letter-spacing: -.035em;
+    }
+
+    h1 .line {
+        display: block;
+    }
+
+    h1 .accent {
+        position: relative;
+        display: inline-block;
+        padding-bottom: 8px;
+    }
+
+    h1 .accent::after {
+        content: "";
+        position: absolute;
+        left: 1px;
+        right: 3px;
+        bottom: 0;
+        height: 3px;
+        background: var(--mint);
+        box-shadow: 0 0 17px rgba(72, 224, 174, .42);
+    }
+
+    .lede {
+        max-width: 512px;
+        margin: 28px 0 0;
+        color: var(--soft);
+        font-family: "Jura", sans-serif;
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 1.55;
+        letter-spacing: .002em;
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 30px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        height: 27px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 2px;
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7.5px;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, .018);
+    }
+
+    .chip.bright {
+        border-color: rgba(72, 224, 174, .26);
+        color: var(--mint);
+        background: rgba(72, 224, 174, .06);
+    }
+
+    /* ---------- rack ---------- */
+
+    .rack-wrap {
+        position: absolute;
+        right: 74px;
+        top: 87px;
+        width: 460px;
+        height: 478px;
+        transform: rotate(-1.15deg);
+        transform-origin: 50% 50%;
+    }
+
+    .rack-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 12px -14px -16px 16px;
+        z-index: -1;
+        border: 1px solid rgba(72, 224, 174, .10);
+        border-radius: 4px 38px 4px 38px;
+        background: rgba(4, 8, 13, .55);
+        transform: rotate(1.7deg);
+    }
+
+    .rack {
+        position: relative;
+        width: 460px;
+        height: 478px;
+        overflow: hidden;
+        padding: 21px 23px 20px;
+        border: 1px solid rgba(205, 226, 250, .21);
+        border-radius: 4px 36px 4px 36px;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, .045), transparent 35%),
+            radial-gradient(ellipse at 92% 0, rgba(72, 224, 174, .12), transparent 48%),
+            var(--panel);
+        box-shadow:
+            0 40px 90px -48px rgba(0, 0, 0, .9),
+            inset 0 1px 0 rgba(255, 255, 255, .06);
+    }
+
+    .rack::before {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 1px solid rgba(205, 226, 250, .055);
+        border-radius: 1px 29px 1px 29px;
+        pointer-events: none;
+    }
+
+    .rack::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, .022) 28.2%, transparent 28.5%);
+    }
+
+    .screw {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(205, 226, 250, .28);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .5);
+        z-index: 3;
+    }
+
+    .screw.tl { top: 12px; left: 12px; }
+    .screw.tr { top: 12px; right: 12px; }
+    .screw.bl { bottom: 12px; left: 12px; }
+    .screw.br { bottom: 12px; right: 12px; }
+
+    .rack-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 0 2px 16px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .rack-head-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rack-mark {
+        display: grid;
+        place-items: center;
+        width: 31px;
+        height: 31px;
+        border: 1px solid rgba(72, 224, 174, .28);
+        border-radius: 7px;
+        color: var(--mint);
+        font-family: "Tektur", sans-serif;
+        font-size: 9px;
+        letter-spacing: -.02em;
+        background: rgba(72, 224, 174, .07);
+    }
+
+    .rack-title {
+        display: grid;
+        gap: 4px;
+        line-height: 1;
+    }
+
+    .rack-title small {
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+    }
+
+    .rack-title strong {
+        color: var(--ink);
+        font-family: "Tektur", sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        letter-spacing: -.02em;
+    }
+
+    .on-air {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 7px;
+        border: 1px solid rgba(72, 224, 174, .3);
+        border-radius: 2px;
+        color: var(--mint);
+        font-family: "JBMono", monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        background: rgba(72, 224, 174, .055);
+    }
+
+    .on-air i {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 9px rgba(72, 224, 174, .9);
+    }
+
+    .channels {
+        display: grid;
+        gap: 0;
+    }
+
+    .channel {
+        --ch: var(--mint);
+        position: relative;
+        padding: 13px 2px 12px 15px;
+        border-bottom: 1px solid var(--line-soft);
+    }
+
+    .channel::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 14px;
+        bottom: 14px;
+        width: 2px;
+        background: var(--ch);
+        opacity: .78;
+    }
+
+    .ch-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        line-height: 1;
+    }
+
+    .ch-index {
+        width: 17px;
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7px;
+        font-weight: 400;
+    }
+
+    .ch-name {
+        color: var(--ink);
+        font-family: "Tektur", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: .015em;
+    }
+
+    .ch-desc {
+        margin-left: 3px;
+        color: var(--muted);
+        font-family: "Jura", sans-serif;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+    .ch-state {
+        margin-left: auto;
+        color: var(--ch);
+        font-family: "JBMono", monospace;
+        font-size: 6.5px;
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        opacity: .9;
+    }
+
+    .wave {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 24px;
+        margin: 8px 0 0;
+        opacity: .8;
+    }
+
+    .wave i {
+        display: block;
+        width: 2px;
+        height: 30%;
+        background: var(--ch);
+        border-radius: 1px;
+        opacity: .7;
+    }
+
+    .wave i:nth-child(3n) { opacity: 1; }
+    .wave i:nth-child(4n) { opacity: .45; }
+
+    .web { --ch: var(--blue); }
+    .pad { --ch: var(--amber); }
+    .mic { --ch: var(--mint); }
+
+    .bus {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        height: 31px;
+        padding-right: 3px;
+    }
+
+    .bus::before {
+        content: "";
+        position: absolute;
+        left: 2px;
+        right: 2px;
+        top: 50%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--line) 22%, rgba(72, 224, 174, .22));
+    }
+
+    .limiter {
+        position: relative;
+        padding: 3px 6px;
+        border: 1px solid rgba(242, 192, 94, .3);
+        border-radius: 2px;
+        color: var(--amber);
+        background: var(--panel);
+        font-family: "JBMono", monospace;
+        font-size: 6.5px;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .bus .node {
+        position: relative;
+        width: 5px;
+        height: 5px;
+        border: 1px solid var(--mint);
+        border-radius: 50%;
+        background: var(--panel);
+    }
+
+    .rack-foot {
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+    }
+
+    .master-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .master-row > span {
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .fader {
+        position: relative;
+        flex: 1;
+        height: 4px;
+        background: rgba(205, 226, 250, .1);
+    }
+
+    .fader::after {
+        content: "";
+        position: absolute;
+        left: 86%;
+        top: -6px;
+        width: 15px;
+        height: 15px;
+        border: 2px solid var(--panel);
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 10px rgba(72, 224, 174, .35);
+    }
+
+    .fader i {
+        display: block;
+        width: 86%;
+        height: 100%;
+        background: var(--mint);
+        opacity: .72;
+    }
+
+    .master-row b {
+        color: var(--mint);
+        font-family: "JBMono", monospace;
+        font-size: 8px;
+        font-weight: 700;
+    }
+
+    .dest-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 10px;
+    }
+
+    .dest-row span {
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+    .dest-row .arrow {
+        color: var(--mint);
+        font-family: "JBMono", monospace;
+        font-size: 10px;
+    }
+
+    .dest-row .dest {
+        color: var(--text);
+        color: var(--ink);
+    }
+
+    .jack {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        margin-left: auto;
+        border: 1px solid rgba(72, 224, 174, .45);
+        border-radius: 50%;
+        background: rgba(72, 224, 174, .06);
+        box-shadow: 0 0 14px rgba(72, 224, 174, .13);
+    }
+
+    .jack i {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 8px rgba(72, 224, 174, .85);
+    }
+
+    /* ---------- footer ---------- */
+
+    .footer {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        bottom: 33px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-family: "JBMono", monospace;
+        font-size: 7.5px;
+        font-weight: 400;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .footer-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .footer-left .footer-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--mint);
+    }
+
+    .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .footer-right .mint {
+        color: var(--mint);
+        font-weight: 700;
+    }
+
+    .footer-right .bar {
+        width: 1px;
+        height: 10px;
+        background: var(--line);
+    }
+</style>
+</head>
+<body>
+<div class="banner">
+    <div class="orbit"></div>
+    <svg class="trace" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M0 548H130L142 540L153 556L164 548H252L263 544L271 552L281 548H392L404 526L417 568L431 537L444 554L458 548H572L586 519L599 573L614 533L629 559L644 548H742" stroke="#48E0AE" stroke-opacity=".2" stroke-width="1"/>
+        <path d="M742 548H860L872 541L884 553L895 548H1007L1019 527L1032 566L1046 538L1058 555L1071 548H1280" stroke="#48E0AE" stroke-opacity=".12" stroke-width="1"/>
+        <path d="M72 548H1208" stroke="#CDE2FA" stroke-opacity=".07" stroke-width="1"/>
+    </svg>
+
+    <header class="brand">
+        <img src="../app-icon.png" alt="">
+        <div class="brand-copy">
+            <strong>FreeSoundPad</strong>
+            <span>soundboard / browser / mic</span>
+        </div>
+    </header>
+
+    <div class="top-meta">
+        <span class="live"><i></i> Live signal</span>
+        <span class="rule"></span>
+        <span>Windows 10/11</span>
+        <span class="rule"></span>
+        <span>v 1.0</span>
+    </div>
+
+    <main class="copy">
+        <div class="kicker">
+            <span class="dot"></span>
+            <span>3 channels</span>
+            <span class="slash">/</span>
+            <span>one clean output</span>
+        </div>
+        <h1>
+            <span class="line">Звук из браузера</span>
+            <span class="line accent">прямо в микрофон.</span>
+        </h1>
+        <p class="lede">Пады, музыка и мемы — в Discord и в игре.<br>Один чистый сигнал без системного шума.</p>
+        <div class="chips">
+            <span class="chip bright">WebView2 capture</span>
+            <span class="chip">48 kHz / stereo</span>
+            <span class="chip">Web remote</span>
+        </div>
+    </main>
+
+    <div class="rack-wrap">
+        <div class="rack">
+            <span class="screw tl"></span>
+            <span class="screw tr"></span>
+            <span class="screw bl"></span>
+            <span class="screw br"></span>
+
+            <div class="rack-head">
+                <div class="rack-head-left">
+                    <span class="rack-mark">FSP</span>
+                    <div class="rack-title">
+                        <small>Mix bus / signal path</small>
+                        <strong>Live instrument</strong>
+                    </div>
+                </div>
+                <span class="on-air"><i></i> On air</span>
+            </div>
+
+            <div class="channels">
+                <article class="channel web">
+                    <div class="ch-top">
+                        <span class="ch-index">01</span>
+                        <span class="ch-name">WEB</span>
+                        <span class="ch-desc">browser audio</span>
+                        <span class="ch-state">captured</span>
+                    </div>
+                    <div class="wave" aria-hidden="true">
+                        <i style="height:28%"></i><i style="height:58%"></i><i style="height:38%"></i><i style="height:82%"></i>
+                        <i style="height:46%"></i><i style="height:72%"></i><i style="height:34%"></i><i style="height:92%"></i>
+                        <i style="height:54%"></i><i style="height:42%"></i><i style="height:78%"></i><i style="height:48%"></i>
+                        <i style="height:66%"></i><i style="height:32%"></i><i style="height:74%"></i><i style="height:44%"></i>
+                        <i style="height:86%"></i><i style="height:36%"></i><i style="height:62%"></i><i style="height:50%"></i>
+                        <i style="height:26%"></i><i style="height:70%"></i>
+                    </div>
+                </article>
+
+                <article class="channel pad">
+                    <div class="ch-top">
+                        <span class="ch-index">02</span>
+                        <span class="ch-name">PAD</span>
+                        <span class="ch-desc">one at a time</span>
+                        <span class="ch-state">ready</span>
+                    </div>
+                    <div class="wave" aria-hidden="true">
+                        <i style="height:38%"></i><i style="height:74%"></i><i style="height:52%"></i><i style="height:94%"></i>
+                        <i style="height:44%"></i><i style="height:68%"></i><i style="height:30%"></i><i style="height:82%"></i>
+                        <i style="height:58%"></i><i style="height:46%"></i><i style="height:88%"></i><i style="height:36%"></i>
+                        <i style="height:64%"></i><i style="height:42%"></i><i style="height:76%"></i><i style="height:50%"></i>
+                        <i style="height:28%"></i><i style="height:72%"></i><i style="height:40%"></i><i style="height:84%"></i>
+                        <i style="height:48%"></i><i style="height:66%"></i>
+                    </div>
+                </article>
+
+                <article class="channel mic">
+                    <div class="ch-top">
+                        <span class="ch-index">03</span>
+                        <span class="ch-name">MIC</span>
+                        <span class="ch-desc">voice passthrough</span>
+                        <span class="ch-state">open</span>
+                    </div>
+                    <div class="wave" aria-hidden="true">
+                        <i style="height:22%"></i><i style="height:46%"></i><i style="height:34%"></i><i style="height:58%"></i>
+                        <i style="height:72%"></i><i style="height:42%"></i><i style="height:88%"></i><i style="height:56%"></i>
+                        <i style="height:30%"></i><i style="height:64%"></i><i style="height:48%"></i><i style="height:76%"></i>
+                        <i style="height:38%"></i><i style="height:84%"></i><i style="height:52%"></i><i style="height:28%"></i>
+                        <i style="height:62%"></i><i style="height:44%"></i><i style="height:70%"></i><i style="height:36%"></i>
+                        <i style="height:54%"></i><i style="height:24%"></i>
+                    </div>
+                </article>
+            </div>
+
+            <div class="bus">
+                <span class="limiter">Limiter</span>
+                <span class="node"></span>
+                <span class="node"></span>
+            </div>
+
+            <div class="rack-foot">
+                <div class="master-row">
+                    <span>Master</span>
+                    <span class="fader"><i></i></span>
+                    <b>86%</b>
+                </div>
+                <div class="dest-row">
+                    <span>Cable input</span>
+                    <span class="arrow">→</span>
+                    <span class="dest">Discord</span>
+                    <span class="jack"><i></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-left">
+            <span class="footer-dot"></span>
+            <span>Windows 10/11 · Portable</span>
+            <span>·</span>
+            <span>No system noise</span>
+        </div>
+        <div class="footer-right">
+            <span>Soundboard / browser / mic</span>
+            <span class="bar"></span>
+            <span class="mint">FreeSoundPad 1.0</span>
+        </div>
+    </footer>
+</div>
+</body>
+</html>

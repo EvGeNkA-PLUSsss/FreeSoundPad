@@ -1,0 +1,22 @@
+# Build artifacts
+bin/
+obj/
+dist/
+*.user
+
+# Visual Studio / Rider
+.vs/
+.idea/
+
+# Runtime data (portable mode)
+Data/
+*.log
+*.tmp
+*.bak
+*.broken-*
+
+# Local downloadable binaries for the site
+web/download/
+
+# Removed website
+web/

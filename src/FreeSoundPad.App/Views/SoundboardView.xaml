@@ -1,0 +1,270 @@
+<UserControl x:Class="FreeSoundPad.App.Views.SoundboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FreeSoundPad.App.Controls"
+             AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
+    <Grid Margin="20,16,24,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- header -->
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Библиотека" Style="{StaticResource H1}" />
+                <TextBlock Text="{Binding PadsCountText}" Style="{StaticResource SubtleText}"
+                           Margin="12,0,0,2" VerticalAlignment="Bottom" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Grid Width="258" Margin="0,0,10,0">
+                    <TextBox x:Name="SearchBox" Style="{StaticResource SearchTextBox}" Padding="0,0,34,0"
+                             TextAlignment="Left"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0"
+                               HorizontalAlignment="Right" IsHitTestVisible="False" />
+                    <TextBlock Text="Поиск по названию или хоткею…" Foreground="{StaticResource MutedBrush}"
+                               FontSize="12" VerticalAlignment="Center" Margin="6,0,32,0" IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding ImportSoundsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                   Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Импорт" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- filters -->
+        <Grid Grid.Row="1" Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0" ItemsSource="{Binding Categories}"
+                     SelectedValuePath="Name" SelectedValue="{Binding SelectedCategory, Mode=TwoWay}"
+                     Background="Transparent" BorderThickness="0" Padding="0"
+                     ItemContainerStyle="{StaticResource ChipListItem}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Display}" VerticalAlignment="Center" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Style="{StaticResource GhostButton}" Height="28" Padding="10,0" Margin="0,0,10,0"
+                        Content="{Binding ShowMoreText}" Command="{Binding ShowMorePadsCommand}"
+                        Visibility="{Binding HasMorePads, Converter={StaticResource BoolVisibility}}" />
+                <TextBlock Text="Сортировка" Style="{StaticResource SubtleText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox Width="150" Style="{StaticResource DarkComboBox}" SelectedIndex="{Binding SortIndex, Mode=TwoWay}">
+                    <ComboBoxItem Content="Сначала новые" />
+                    <ComboBoxItem Content="По имени" />
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- pads -->
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                <StackPanel>
+                <ItemsControl ItemsSource="{Binding VisiblePads}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding PlayCommand}"
+                                    Background="{Binding PadBackground}" BorderBrush="{Binding BorderBrush}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource PadButton}">
+                                        <Setter Property="Width" Value="196" />
+                                        <Setter Property="Height" Value="150" />
+                                        <Setter Property="Margin" Value="0,0,7,7" />
+                                        <Setter Property="ToolTip" Value="{Binding FileName}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{Binding AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
+                                <Button.ContextMenu>
+                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="Играть" Command="{Binding PlayCommand}" />
+                                        <MenuItem Header="Стоп" Command="{Binding StopCommand}" />
+                                        <Separator />
+                                        <MenuItem Header="В избранное / из избранного" Command="{Binding ToggleFavoriteCommand}" />
+                                        <MenuItem Header="Зациклить" Command="{Binding ToggleLoopCommand}" />
+                                        <MenuItem Header="Сменить цвет" Command="{Binding CycleColorCommand}" />
+                                        <Separator />
+                                        <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" />
+                                        <MenuItem Header="Горячая клавиша…" Command="{Binding HotkeyCommand}" />
+                                        <MenuItem Header="Показать в папке" Command="{Binding OpenLocationCommand}" />
+                                        <Separator />
+                                        <MenuItem Header="Убрать из библиотеки" Command="{Binding RemoveCommand}" />
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+
+                                <Grid Margin="10,9,10,8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0">
+                                        <Border>
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{StaticResource KeyBadge}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasHotkey}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding ShortKey}" FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="9" Foreground="#B3FFFFFF" />
+                                        </Border>
+
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding DurationText}" FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="9.5" Foreground="#66FFFFFF" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <TextBlock Text="&#xE769;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                                       Foreground="{Binding AccentBrush}" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <TextBlock Text="&#xE735;" FontFamily="{StaticResource IconFont}" FontSize="9"
+                                                       Foreground="{StaticResource AmberBrush}" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Favorite}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="1" Text="{Binding Title}" VerticalAlignment="Bottom"
+                                               FontSize="13" FontWeight="SemiBold" Foreground="#F2FFFFFF"
+                                               TextTrimming="CharacterEllipsis" Margin="0,0,0,3" />
+
+                                    <controls:Waveform Grid.Row="2" Height="18" Peaks="{Binding Peaks}"
+                                                       BarBrush="{Binding WaveBrush}" />
+
+                                    <ProgressBar Grid.RowSpan="3" Style="{StaticResource ThinProgress}"
+                                                 VerticalAlignment="Bottom" Value="{Binding Progress}"
+                                                 Foreground="{Binding AccentBrush}" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Style="{StaticResource GhostButton}" Command="{Binding ShowMorePadsCommand}"
+                        Content="{Binding ShowMoreText}" HorizontalAlignment="Center"
+                        Height="36" Padding="16,0" Margin="0,8,0,6"
+                        Visibility="{Binding HasMorePads, Converter={StaticResource BoolVisibility}}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- empty state -->
+            <Border Background="{StaticResource BgBrush}" CornerRadius="14">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Pads.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420">
+                    <Border Width="66" Height="66" CornerRadius="18" Background="{StaticResource MintSoftBrush}"
+                            BorderBrush="{StaticResource MintBorderBrush}" BorderThickness="1" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="28"
+                                   Foreground="{StaticResource MintBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Библиотека пуста" FontFamily="{StaticResource DisplayFont}" FontSize="20"
+                               FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,18,0,0" />
+                    <TextBlock Text="Перетащите mp3 или wav в окно, либо добавьте файлы кнопкой. Звуки копируются в библиотеку. Горячие клавиши назначаются вручную в контекстном меню пада."
+                               Style="{StaticResource SubtleText}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,18" />
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding ImportSoundsCommand}" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="12" Margin="0,0,7,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Добавить звуки" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{StaticResource BgBrush}" CornerRadius="14"
+                    Visibility="{Binding IsFilterEmpty, Converter={StaticResource BoolVisibility}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420">
+                    <TextBlock Text="Ничего не найдено" FontFamily="{StaticResource DisplayFont}" FontSize="20"
+                               FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="Измените запрос или выберите другую категорию."
+                               Style="{StaticResource SubtleText}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+
+

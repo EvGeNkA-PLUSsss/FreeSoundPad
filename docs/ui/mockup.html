@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>FreeSoundPad — UI-макет v0.1</title>
+<style>
+  :root{
+    --bg:#06080C;
+    --panel:#0B0F16;
+    --panel2:#101622;
+    --panel3:#151D2B;
+    --panel4:#1B2434;
+    --line:rgba(148,170,205,.10);
+    --line2:rgba(148,170,205,.18);
+    --text:#E8EEF9;
+    --text2:#AFBBD0;
+    --muted:#7F8DA3;
+    --muted2:#5A687E;
+    --mint:#3FE0B0;
+    --mint2:#23C795;
+    --violet:#9B8CFF;
+    --cyan:#4CC9F0;
+    --red:#FF5C6C;
+    --amber:#FFC266;
+    --mono:"Cascadia Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+    font-size:13px;
+    overflow:hidden;
+    user-select:none;
+    -webkit-font-smoothing:antialiased;
+  }
+  svg{display:block}
+  button{font-family:inherit}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#26303F;border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ================= SHELL ================= */
+  .app{
+    height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden;
+    background:
+      radial-gradient(900px 520px at 10% -12%, rgba(63,224,176,.075), transparent 60%),
+      radial-gradient(760px 420px at 96% -6%, rgba(155,140,255,.055), transparent 60%),
+      var(--bg);
+  }
+
+  /* ================= TITLEBAR ================= */
+  .titlebar{
+    flex:0 0 56px;height:56px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    padding:0 10px 0 16px;border-bottom:1px solid var(--line);
+    background:rgba(9,13,20,.68);backdrop-filter:blur(14px);z-index:30;position:relative;
+  }
+  .brand{display:flex;align-items:center;gap:10px;justify-self:start}
+  .logo{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#03241B;
+    background:linear-gradient(150deg,#55F0C5,#1CAE87);
+    box-shadow:0 5px 18px -4px rgba(63,224,176,.55), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .wordmark{display:flex;align-items:baseline;gap:1px;font-size:14.5px;font-weight:680;letter-spacing:-.015em}
+  .wordmark em{font-style:normal;color:var(--mint)}
+  .ver{
+    font:600 8.5px/1 var(--mono);letter-spacing:.08em;color:var(--muted);
+    border:1px solid var(--line2);border-radius:99px;padding:4px 7px;margin-left:8px;text-transform:uppercase;
+  }
+  .tabs{
+    display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(16,22,34,.85);
+    border:1px solid var(--line);
+  }
+  .tab{
+    display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 16px;border-radius:8px;
+    border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;
+    transition:.15s;
+  }
+  .tab svg{width:14px;height:14px;opacity:.8}
+  .tab:hover{color:var(--text2)}
+  .tab.active{background:#1A2331;color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 8px -4px #000}
+  .tab.active svg{color:var(--mint);opacity:1}
+  .topright{display:flex;align-items:center;gap:8px;justify-self:end}
+  .device-pill{
+    display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:10px;
+    background:var(--panel2);border:1px solid var(--line2);cursor:pointer;transition:.15s;
+  }
+  .device-pill:hover{border-color:rgba(63,224,176,.35);background:var(--panel3)}
+  .device-pill .dp-icon{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--mint);background:rgba(63,224,176,.10)}
+  .dp-text{display:flex;flex-direction:column;line-height:1.2;gap:1px}
+  .dp-label{font-size:8px;font-weight:700;letter-spacing:.14em;color:var(--muted)}
+  .dp-value{font-size:12px;font-weight:620;display:flex;align-items:center;gap:5px}
+  .dp-value .dot{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
+  .dp-chev{color:var(--muted);margin-left:2px}
+  .icon-btn{
+    width:34px;height:34px;border-radius:9px;display:grid;place-items:center;border:1px solid transparent;
+    background:transparent;color:var(--muted);cursor:pointer;transition:.15s;
+  }
+  .icon-btn:hover{background:var(--panel2);color:var(--text)}
+  .icon-btn.active{color:var(--mint);background:rgba(63,224,176,.09);border-color:rgba(63,224,176,.16)}
+  .win-controls{display:flex;align-items:center;gap:2px;margin-left:4px;padding-left:8px;border-left:1px solid var(--line)}
+  .win-btn{width:38px;height:32px;border-radius:8px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+  .win-btn:hover{background:var(--panel2);color:var(--text)}
+  .win-btn.close:hover{background:#E5484D;color:#fff}
+
+  /* ================= WORKSPACE ================= */
+  .workspace{flex:1;display:flex;min-height:0}
+  .rail{
+    flex:0 0 64px;width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:14px 0;border-right:1px solid var(--line);background:rgba(8,11,17,.45);
+  }
+  .rail-btn{
+    width:42px;height:42px;border-radius:11px;display:grid;place-items:center;border:1px solid transparent;
+    background:transparent;color:var(--muted);cursor:pointer;position:relative;transition:.15s;
+  }
+  .rail-btn:hover{color:var(--text2);background:var(--panel2)}
+  .rail-btn.active{color:var(--mint);background:rgba(63,224,176,.09);border-color:rgba(63,224,176,.16)}
+  .rail-btn.active::before{
+    content:'';position:absolute;left:-11px;top:11px;width:3px;height:20px;border-radius:2px;
+    background:var(--mint);box-shadow:0 0 10px rgba(63,224,176,.9);
+  }
+  .rail-sep{width:24px;height:1px;background:var(--line);margin:7px 0}
+  .rail-spacer{flex:1}
+  .rail-dot{position:absolute;top:7px;right:7px;width:5px;height:5px;border-radius:50%;background:var(--mint)}
+
+  .main{flex:1;min-width:0;position:relative}
+  .view{position:absolute;inset:0;display:none;flex-direction:column;min-height:0}
+  body[data-view="sounds"] .view-sounds{display:flex}
+  body[data-view="browser"] .view-browser{display:flex}
+
+  /* ================= SOUNDBOARD ================= */
+  .library{padding:20px 24px 18px;display:flex;flex-direction:column;min-height:0;height:100%}
+  .lib-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .lib-title{display:flex;align-items:baseline;gap:12px}
+  .lib-title h1{font-size:21px;font-weight:720;letter-spacing:-.025em;margin:0;font-family:"Segoe UI Variable Display","Segoe UI",sans-serif}
+  .count{font-size:11.5px;color:var(--muted)}
+  .lib-actions{display:flex;align-items:center;gap:10px}
+  .search{
+    display:flex;align-items:center;gap:8px;height:36px;width:252px;padding:0 12px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:12px;
+  }
+  .search svg{opacity:.65;flex:0 0 auto}
+  .search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .btn-primary{
+    height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 14px;border:0;border-radius:10px;
+    background:linear-gradient(180deg,#4CEBC0,#2BCF9F);color:#04241B;font-size:12.5px;font-weight:720;cursor:pointer;
+    box-shadow:0 8px 20px -10px rgba(63,224,176,.7), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .btn-primary:hover{filter:brightness(1.05)}
+  .chips{display:flex;align-items:center;gap:8px;margin-top:15px}
+  .chip{
+    height:31px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);
+    color:var(--text2);font-size:11.5px;font-weight:560;display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+    transition:.15s;white-space:nowrap;
+  }
+  .chip:hover{background:var(--panel2)}
+  .chip .n{font:500 10px var(--mono);color:var(--muted2)}
+  .chip.active{background:var(--panel3);border-color:rgba(255,255,255,.14);color:var(--text)}
+  .chip.active .n{color:var(--mint)}
+  .chips .spacer{flex:1}
+  .sort{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);cursor:pointer;padding:0 4px}
+  .grid{
+    margin-top:14px;flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    grid-auto-rows:minmax(0,1fr);gap:10px;
+  }
+  .pad{
+    position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column;text-align:left;
+    padding:9px 11px 10px;border-radius:12px;border:1px solid rgba(var(--c),.20);
+    background:
+      radial-gradient(140% 100% at 108% 118%, rgba(var(--c),.19), transparent 58%),
+      linear-gradient(160deg, rgba(var(--c),.16), rgba(var(--c),.035) 55%, rgba(255,255,255,.012)),
+      var(--panel);
+    color:var(--text);cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .pad:hover{transform:translateY(-2px);border-color:rgba(var(--c),.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 16px 34px -20px rgba(var(--c),.9)}
+  .pad-top{display:flex;align-items:center;justify-content:space-between;gap:6px;z-index:2}
+  .pad-key{
+    font:600 9px/1 var(--mono);letter-spacing:.02em;padding:3px 5px;border-radius:5px;white-space:nowrap;
+    background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.075);color:rgba(255,255,255,.62);
+  }
+  .pad-key.empty{visibility:hidden}
+  .pad-dur{font:500 9.5px var(--mono);color:rgba(255,255,255,.42)}
+  .pad-dur .ic{color:rgb(var(--c));filter:drop-shadow(0 0 5px rgba(var(--c),.7))}
+  .pad-name{
+    margin-top:auto;font-size:13px;font-weight:620;letter-spacing:-.012em;position:relative;z-index:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.94);
+  }
+  .pad-wave{height:19px;margin-top:5px;display:flex;align-items:flex-end;gap:2px;z-index:1}
+  .pad-wave i{flex:1;border-radius:1px;background:rgba(var(--c),.62);min-height:2px}
+  .pad.playing{border-color:rgba(var(--c),.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(var(--c),.45),0 14px 40px -18px rgba(var(--c),.95)}
+  .pad.playing .pad-name{color:#fff}
+  .pad.playing .pad-wave i{background:rgba(var(--c),.85)}
+  .pad-progress{position:absolute;left:0;bottom:0;height:2.5px;background:rgb(var(--c));box-shadow:0 0 10px rgba(var(--c),.9);z-index:3}
+  .pad.flash{animation:padflash 2.2s infinite}
+  @keyframes padflash{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(var(--c),.35),0 14px 40px -20px rgba(var(--c),.7)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(var(--c),.6),0 16px 46px -16px rgba(var(--c),1)}}
+
+  /* ================= MIXER ================= */
+  .side{
+    flex:0 0 276px;width:276px;display:flex;flex-direction:column;min-height:0;
+    border-left:1px solid var(--line);background:rgba(9,13,20,.55);
+  }
+  body[data-view="sounds"] .side-capture{display:none}
+  body[data-view="browser"] .side-mixer{display:none}
+  .mixer{padding:17px 16px 15px;display:flex;flex-direction:column;gap:15px;height:100%;min-height:0}
+  .mix-head{display:flex;align-items:center;justify-content:space-between}
+  .mix-title{font-size:9.5px;font-weight:750;letter-spacing:.17em;color:var(--muted)}
+  .link{border:0;background:none;color:var(--muted);font-size:10.5px;cursor:pointer}
+  .link:hover{color:var(--text2)}
+  .now-card{
+    padding:11px 12px 12px;border-radius:12px;border:1px solid rgba(63,224,176,.16);
+    background:linear-gradient(158deg, rgba(63,224,176,.10), rgba(63,224,176,.015) 62%), var(--panel2);
+  }
+  .now-label{display:flex;align-items:center;gap:6px;font-size:8px;font-weight:750;letter-spacing:.16em;color:rgba(63,224,176,.85)}
+  .live-dot{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);animation:pulse 1.7s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  .now-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:7px}
+  .now-name{font-size:14px;font-weight:650;letter-spacing:-.01em}
+  .now-time{font:500 9.5px var(--mono);color:var(--muted)}
+  .now-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:9px;overflow:hidden}
+  .now-bar i{display:block;height:100%;width:38%;border-radius:2px;background:linear-gradient(90deg,var(--mint2),var(--mint));box-shadow:0 0 10px rgba(63,224,176,.65)}
+  .now-meta{margin-top:7px;font-size:9.5px;color:var(--muted)}
+  .fader-bank{display:flex;gap:7px;flex:1;min-height:0}
+  .strip{
+    flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;padding:9px 5px 8px;
+    border-radius:10px;border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(var(--c),.075), transparent 42%), var(--panel2);
+  }
+  .strip-name{font-size:8.5px;font-weight:750;letter-spacing:.13em;color:var(--text2)}
+  .strip-dev{
+    font-size:8px;color:var(--muted2);margin-top:3px;max-width:100%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .strip-body{flex:1;min-height:0;display:flex;align-items:stretch;gap:6px;padding:11px 0 9px}
+  .fader-v{position:relative;width:20px;flex:0 0 20px}
+  .fader-v::before{
+    content:'';position:absolute;left:50%;top:0;bottom:0;width:4px;transform:translateX(-50%);
+    border-radius:2px;background:#18202D;
+  }
+  .fader-v .fill{
+    position:absolute;left:50%;bottom:0;width:4px;transform:translateX(-50%);height:var(--v);
+    border-radius:2px;background:linear-gradient(180deg, rgb(var(--c)), rgba(var(--c),.35));
+  }
+  .fader-v .thumb{
+    position:absolute;left:50%;bottom:var(--v);width:19px;height:8px;transform:translate(-50%,50%);
+    border-radius:2.5px;background:#EAF2FF;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.6);
+  }
+  .ladder{display:flex;flex-direction:column-reverse;gap:2px;width:5px;flex:0 0 5px;padding:1px 0}
+  .ladder i{flex:1;min-height:2px;border-radius:1px;background:rgba(255,255,255,.06)}
+  .strip-val{font:600 9.5px var(--mono);color:var(--text2)}
+  .strip-mute{
+    margin-top:7px;width:20px;height:17px;border-radius:5px;border:1px solid var(--line2);
+    background:transparent;color:var(--muted);font:700 8px var(--mono);display:grid;place-items:center;cursor:pointer;
+  }
+  .strip-mute.off{color:var(--red);border-color:rgba(255,92,108,.35);background:rgba(255,92,108,.08)}
+  .db{font:500 9px var(--mono);color:var(--muted2);white-space:nowrap}
+  .vu{display:flex;align-items:center;gap:1.5px}
+  .vu i{width:3px;height:5px;border-radius:1px;background:rgba(255,255,255,.065)}
+  .out-card{margin-top:0;border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:11px 12px}
+  .out-label{font-size:8px;font-weight:750;letter-spacing:.17em;color:var(--muted)}
+  .out-dev{display:flex;align-items:center;gap:8px;margin-top:7px}
+  .out-dev .ic{width:26px;height:26px;border-radius:7px;background:rgba(63,224,176,.09);color:var(--mint);display:grid;place-items:center;flex:0 0 auto}
+  .out-dev .txt{min-width:0}
+  .out-dev b{display:block;font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .out-dev small{display:block;font-size:9px;color:var(--muted2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .out-hint{
+    margin-top:9px;padding:6px 8px;border-radius:7px;border:1px dashed rgba(63,224,176,.22);
+    background:rgba(63,224,176,.05);font-size:9.5px;line-height:1.4;color:rgba(63,224,176,.8);
+  }
+  .master-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:11px;font-size:9px;letter-spacing:.12em;font-weight:750;color:var(--text2)}
+  .master-row b{font:600 10px var(--mono);color:var(--mint)}
+  .master-vu{display:flex;gap:2px;margin-top:8px}
+  .master-vu i{flex:1;height:6px;border-radius:2px;background:rgba(255,255,255,.06)}
+  .switches{display:flex;flex-direction:column;gap:9px;padding-top:2px}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:var(--text2);cursor:pointer}
+  .switch{
+    flex:0 0 32px;width:32px;height:18px;border-radius:9px;background:#222B3A;border:1px solid rgba(255,255,255,.06);
+    position:relative;transition:.15s;
+  }
+  .switch i{position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#8A97AB;transition:.15s}
+  .switch.on{background:rgba(63,224,176,.92);border-color:rgba(63,224,176,.6)}
+  .switch.on i{left:16px;background:#04241B}
+
+  /* ================= STATUS BAR ================= */
+  .statusbar{
+    flex:0 0 52px;height:52px;display:flex;align-items:center;gap:14px;padding:0 14px;
+    border-top:1px solid var(--line);background:rgba(8,11,17,.85);z-index:20;
+  }
+  .stop-btn{
+    display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 11px;border-radius:9px;
+    border:1px solid rgba(255,92,108,.26);background:rgba(255,92,108,.075);color:#FF8F99;
+    font-size:9.5px;font-weight:750;letter-spacing:.11em;cursor:pointer;white-space:nowrap;
+  }
+  .stop-btn:hover{background:rgba(255,92,108,.13)}
+  .stop-btn svg{color:#FF5C6C}
+  kbd{
+    font:500 9px/1 var(--mono);color:var(--muted);background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:3px 4px;
+  }
+  .master-meter{display:flex;align-items:center;gap:9px;flex:1;max-width:340px}
+  .master-meter > span{font-size:8px;font-weight:750;letter-spacing:.15em;color:var(--muted)}
+  .master-meter .vu{flex:1;gap:2px}
+  .master-meter .vu i{flex:1;width:auto;height:6px}
+  .master-meter .db{font-size:9px}
+  .status-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .status-chip{
+    display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:7px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--text2);font-size:10.5px;cursor:pointer;
+  }
+  .status-chip.on{color:var(--mint);border-color:rgba(63,224,176,.22);background:rgba(63,224,176,.07)}
+  .status-chip svg{opacity:.9}
+  .status-meta{font:500 9.5px var(--mono);color:var(--muted2);white-space:nowrap;margin-left:2px}
+
+  /* ================= BROWSER VIEW ================= */
+  .browser{flex:1;display:flex;flex-direction:column;min-height:0}
+  .browser-bar{
+    flex:0 0 50px;height:50px;display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid var(--line);background:rgba(11,15,22,.75);
+  }
+  .nav-btns{display:flex;gap:2px}
+  .nav-btns .icon-btn{width:30px;height:30px}
+  .urlbar{
+    flex:1;height:33px;display:flex;align-items:center;gap:8px;padding:0 12px;
+    background:var(--panel3);border:1px solid var(--line2);border-radius:8px;font-size:11.5px;color:var(--muted);
+  }
+  .urlbar .domain{color:var(--text2)}
+  .urlbar .path{color:var(--muted2)}
+  .urlbar .grow{flex:1}
+  .browser-actions{display:flex;gap:2px}
+  .browser-actions .icon-btn{width:30px;height:30px}
+  .webpage{flex:1;min-height:0;position:relative;overflow:hidden;background:#030303}
+
+  /* fake YouTube Music */
+  .ytm{height:100%;display:flex;flex-direction:column;background:#030303;color:#F1F1F1;font-family:"Segoe UI",system-ui,sans-serif}
+  .ytm-top{flex:0 0 56px;height:56px;display:flex;align-items:center;gap:22px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .ytm-logo{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+  .ytm-mark{width:24px;height:24px;border-radius:50%;background:#FF0033;display:grid;place-items:center;color:#fff;font-size:9px;padding-left:1px}
+  .ytm-search{width:360px;height:33px;border-radius:8px;border:1px solid #262626;background:#141414;display:flex;align-items:center;gap:9px;padding:0 12px;color:#7C7C7C;font-size:11.5px}
+  .ytm-me{margin-left:auto;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#5B8CFF,#A06BFF)}
+  .ytm-body{flex:1;display:flex;min-height:0}
+  .ytm-nav{flex:0 0 200px;width:200px;padding:13px 10px;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;gap:2px}
+  .ytm-nav div{height:34px;display:flex;align-items:center;gap:11px;padding:0 12px;border-radius:7px;font-size:12px;color:#A7A7A7;white-space:nowrap}
+  .ytm-nav div .ni{width:14px;text-align:center;opacity:.75;font-size:12px}
+  .ytm-nav div.active{background:#191919;color:#fff}
+  .ytm-nav .sep{height:1px;background:rgba(255,255,255,.07);margin:9px 4px;padding:0}
+  .ytm-nav .lbl{padding:0 12px;font-size:10px;color:#6E6E6E;letter-spacing:.06em;height:26px;display:flex;align-items:center}
+  .ytm-scroll{flex:1;min-width:0;padding:18px 22px;overflow:hidden}
+  .ytm-scroll h2{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 13px}
+  .cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+  .card{min-width:0}
+  .cover{aspect-ratio:1/1;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 10px 26px -14px rgba(0,0,0,.9)}
+  .cover::after{content:'';position:absolute;inset:0;background:linear-gradient(150deg,rgba(255,255,255,.22),transparent 48%)}
+  .cover::before{content:'';position:absolute;inset:0;background:radial-gradient(90% 70% at 80% 110%,rgba(0,0,0,.5),transparent 60%)}
+  .g1{background:linear-gradient(145deg,#FF6B6B,#7A1F3D)}
+  .g2{background:linear-gradient(145deg,#3FE0B0,#0B5E4A)}
+  .g3{background:linear-gradient(145deg,#9B8CFF,#2C2370)}
+  .g4{background:linear-gradient(145deg,#FFC266,#8A3C00)}
+  .g5{background:linear-gradient(145deg,#4CC9F0,#0B3E63)}
+  .g6{background:linear-gradient(145deg,#F472B6,#6B1147)}
+  .card .t{margin-top:7px;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .s{margin-top:2px;font-size:10px;color:#8A8A8A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ytm-row-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px}
+  .ytm-row-head h3{font-size:15px;font-weight:650;margin:0;letter-spacing:-.01em}
+  .ytm-row-head span{font-size:10.5px;color:#8A8A8A}
+  .rows{display:flex;flex-direction:column;gap:1px}
+  .row{display:flex;align-items:center;gap:11px;height:42px;padding:0 8px;border-radius:6px}
+  .row:hover{background:#121212}
+  .row .num{width:16px;text-align:center;font-size:10.5px;color:#7C7C7C}
+  .row .rt{min-width:0}
+  .row .rt b{display:block;font-size:11.5px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .rt small{display:block;font-size:10px;color:#8A8A8A;margin-top:1px}
+  .row .len{margin-left:auto;font-size:10px;color:#7C7C7C;font-variant-numeric:tabular-nums}
+  .ytm-player{
+    flex:0 0 70px;height:70px;border-top:1px solid rgba(255,255,255,.08);background:#0A0A0A;
+    display:flex;align-items:center;gap:14px;padding:0 16px;
+  }
+  .np-art{width:44px;height:44px;border-radius:6px;flex:0 0 auto;background:linear-gradient(145deg,#FFC266,#8A3C00);position:relative;overflow:hidden}
+  .np-art::after{content:'';position:absolute;inset:0;background:linear-gradient(150deg,rgba(255,255,255,.25),transparent 50%)}
+  .np-meta{min-width:0;flex:0 0 190px}
+  .np-meta b{display:block;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .np-meta small{display:block;font-size:10px;color:#8A8A8A;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .np-ctrl{display:flex;align-items:center;gap:16px;flex:1;justify-content:center}
+  .np-ctrl .c{color:#B9B9B9;font-size:13px;width:20px;text-align:center}
+  .np-ctrl .play{width:30px;height:30px;border-radius:50%;background:#F1F1F1;color:#030303;display:grid;place-items:center;font-size:10px}
+  .np-prog{flex:0 0 260px;display:flex;align-items:center;gap:8px;font-size:9px;color:#8A8A8A}
+  .np-prog .bar{flex:1;height:3px;border-radius:2px;background:#2A2A2A;position:relative;overflow:hidden}
+  .np-prog .bar i{position:absolute;left:0;top:0;bottom:0;width:34%;background:#F1F1F1;border-radius:2px}
+  .web-capture-chip{
+    position:absolute;right:14px;top:14px;height:27px;display:flex;align-items:center;gap:7px;padding:0 10px;
+    border-radius:99px;background:rgba(6,9,13,.78);border:1px solid rgba(63,224,176,.28);color:rgba(63,224,176,.9);
+    font-size:10px;font-weight:600;backdrop-filter:blur(8px);z-index:5;
+  }
+  .web-capture-chip .live-dot{width:5px;height:5px}
+
+  /* ================= CAPTURE PANEL ================= */
+  .capture{padding:17px 16px 15px;display:flex;flex-direction:column;gap:14px;height:100%;min-height:0}
+  .cap-title{font-size:9.5px;font-weight:750;letter-spacing:.17em;color:var(--muted)}
+  .cap-status{
+    padding:13px 13px 12px;border-radius:12px;border:1px solid rgba(63,224,176,.2);
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgba(63,224,176,.12), transparent 55%),
+      linear-gradient(160deg, rgba(63,224,176,.07), rgba(63,224,176,.012)), var(--panel2);
+  }
+  .cap-status-top{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:650}
+  .cap-status-top .live-dot{width:6px;height:6px}
+  .cap-sub{margin-top:6px;font:500 9.5px var(--mono);color:var(--muted);line-height:1.5;word-break:break-word}
+  .cap-vu{display:flex;gap:2px;margin-top:12px}
+  .cap-vu i{flex:1;height:9px;border-radius:2px;background:rgba(255,255,255,.06)}
+  .cap-db{display:flex;justify-content:space-between;margin-top:7px;font:500 9px var(--mono);color:var(--muted2)}
+  .cap-wave{display:flex;align-items:flex-end;gap:2px;height:46px;margin-top:12px;padding:0 1px}
+  .cap-wave i{flex:1;border-radius:1px;background:linear-gradient(180deg,rgba(63,224,176,.95),rgba(63,224,176,.16))}
+  .route-card{
+    padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+    background:linear-gradient(160deg,rgba(76,201,240,.05),transparent 65%),var(--panel2);
+  }
+  .route-label{font-size:8px;font-weight:750;letter-spacing:.16em;color:var(--muted)}
+  .route-row{display:flex;align-items:center;gap:7px;margin-top:10px}
+  .route-node{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:var(--text2);white-space:nowrap}
+  .route-node .ic{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;background:rgba(76,201,240,.10);color:var(--cyan)}
+  .route-node .ic.web{background:rgba(63,224,176,.10);color:var(--mint);font:700 7px var(--mono);letter-spacing:.02em}
+  .route-line{
+    flex:1;height:1px;min-width:8px;position:relative;
+    background:linear-gradient(90deg,rgba(76,201,240,.45),rgba(63,224,176,.45));
+  }
+  .route-line::after{
+    content:'';position:absolute;right:-1px;top:-2.5px;border-left:4px solid rgba(63,224,176,.75);
+    border-top:3px solid transparent;border-bottom:3px solid transparent;
+  }
+  .route-hint{margin-top:9px;font-size:9px;line-height:1.5;color:var(--muted2)}
+  .cap-switch{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;
+    border:1px solid var(--line);border-radius:10px;background:var(--panel2);cursor:pointer;
+  }
+  .cap-switch .cs-t b{display:block;font-size:11.5px;font-weight:620;color:var(--text)}
+  .cap-switch .cs-t small{display:block;margin-top:3px;font-size:9.5px;color:var(--muted)}
+  .cap-info{border:1px solid var(--line);border-radius:10px;background:rgba(16,22,34,.5);padding:4px 12px}
+  .cap-info div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:10.5px}
+  .cap-info div:last-child{border-bottom:0}
+  .cap-info span{color:var(--muted)}
+  .cap-info b{color:var(--text2);font-weight:600;text-align:right}
+  .btn-outline{
+    height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);background:transparent;
+    color:var(--text2);font-size:11px;font-weight:550;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;
+  }
+  .btn-outline:hover{background:var(--panel2);color:var(--text)}
+  .cap-note{font-size:9.5px;line-height:1.5;color:var(--muted2);padding:0 2px;margin-top:auto}
+  .cap-note b{color:var(--muted);font-weight:600}
+  .cap-exclude{
+    margin-top:auto;padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+    background:rgba(16,22,34,.45);
+  }
+  .ex-title{font-size:8px;font-weight:750;letter-spacing:.16em;color:var(--muted)}
+  .ex-row{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:9.5px;color:var(--muted2)}
+  .ex-row svg{flex:0 0 auto;color:rgba(255,92,108,.65)}
+
+  /* ================= SETTINGS MODAL ================= */
+  .settings-layer{
+    position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+    background:rgba(3,6,10,.72);backdrop-filter:blur(9px);
+  }
+  body.settings-open .settings-layer{display:flex}
+  .modal{
+    width:788px;max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;
+    border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#0D121B;
+    box-shadow:0 50px 140px -30px #000, inset 0 1px 0 rgba(255,255,255,.07);
+  }
+  .modal-head{
+    flex:0 0 56px;height:56px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 18px 0 22px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.018);
+  }
+  .modal-head h2{margin:0;font-size:15px;font-weight:680;letter-spacing:-.01em}
+  .modal-head .sub{font-size:11px;color:var(--muted);margin-left:10px;font-weight:400}
+  .modal-body{padding:18px 22px 10px;overflow:auto;display:flex;flex-direction:column;gap:15px}
+  .form-section{display:flex;flex-direction:column}
+  .form-section h3{
+    display:flex;align-items:center;gap:9px;margin:0 0 10px;font-size:9.5px;font-weight:750;
+    letter-spacing:.16em;color:var(--muted);
+  }
+  .badge{font-size:8.5px;font-weight:750;letter-spacing:.06em;padding:3px 7px;border-radius:99px}
+  .badge.ok{color:var(--mint);background:rgba(63,224,176,.1);border:1px solid rgba(63,224,176,.26)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field > span{font-size:9px;letter-spacing:.1em;color:var(--muted2);font-weight:600}
+  select{
+    width:100%;height:34px;border-radius:8px;background:var(--panel2);border:1px solid var(--line2);
+    color:var(--text);font:inherit;font-size:11.5px;padding:0 30px 0 11px;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237F8DA3' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center;
+  }
+  select:focus{outline:none;border-color:rgba(63,224,176,.5)}
+  .cable-card{
+    padding:13px 15px;border-radius:12px;border:1px solid rgba(63,224,176,.18);
+    background:linear-gradient(158deg, rgba(63,224,176,.07), transparent 65%);
+  }
+  .cable-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .cable-line b{font-size:12.5px;font-weight:620}
+  .cable-line span{font-size:10px;color:var(--muted)}
+  .steps{list-style:none;margin:11px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .steps li{display:flex;align-items:flex-start;gap:9px;font-size:11.5px;line-height:1.4;color:var(--text2)}
+  .steps li b{
+    flex:0 0 17px;width:17px;height:17px;border-radius:50%;background:rgba(63,224,176,.13);color:var(--mint);
+    display:grid;place-items:center;font-size:9px;font-weight:700;margin-top:1px;
+  }
+  .steps code{font:500 10.5px var(--mono);color:var(--text);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 5px}
+  .test-line{display:flex;align-items:center;gap:11px;margin-top:12px}
+  .test-line .vu{flex:1}
+  .test-line .vu i{width:3px;height:8px}
+  .test-line .db{min-width:44px;text-align:right}
+  .switch-list{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:10px;background:rgba(16,22,34,.45);padding:4px 12px}
+  .switch-list .switch-row{padding:8px 0;border-bottom:1px solid var(--line);font-size:11.5px}
+  .switch-list .switch-row:last-child{border-bottom:0}
+  .switch-list .switch-row small{display:block;font-size:9.5px;color:var(--muted2);margin-top:2px;font-weight:400}
+  .hotkeys{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:rgba(16,22,34,.45);padding:2px 12px}
+  .hk-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:11.5px;color:var(--text2)}
+  .hk-row:last-child{border-bottom:0}
+  .key-group{display:flex;gap:4px;align-items:center}
+  .key-group kbd{background:var(--panel3);border-color:var(--line2);color:var(--text);font-size:9.5px;padding:3px 6px;border-radius:5px}
+  .key-group .edit{font-size:10px;color:var(--muted);margin-left:6px;cursor:pointer}
+  .key-group .edit:hover{color:var(--mint)}
+  .modal-foot{
+    flex:0 0 60px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:0 20px;border-top:1px solid var(--line);background:rgba(255,255,255,.018);
+  }
+  .foot-note{font-size:10px;color:var(--muted2)}
+  .foot-actions{display:flex;gap:9px}
+  .btn-ghost{
+    height:32px;padding:0 15px;border-radius:8px;border:1px solid var(--line2);background:transparent;
+    color:var(--text2);font-size:11.5px;cursor:pointer;
+  }
+  .btn-ghost:hover{background:var(--panel2)}
+</style>
+</head>
+<body data-view="sounds">
+<div class="app">
+
+  <!-- ============ TITLEBAR ============ -->
+  <header class="titlebar">
+    <div class="brand">
+      <div class="logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l2-5 3 10 3-14 3 12 2-3h4"/></svg>
+      </div>
+      <div class="wordmark">FreeSound<em>Pad</em></div>
+      <div class="ver">0.1 · beta</div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-view="sounds">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+        Звуки
+      </button>
+      <button class="tab" data-view="browser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/></svg>
+        Браузер
+      </button>
+    </nav>
+
+    <div class="topright">
+      <button class="device-pill" title="Выходное устройство">
+        <span class="dp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l6 5V4L8 9z"/><path d="M17 8.5a5 5 0 0 1 0 7"/></svg>
+        </span>
+        <span class="dp-text">
+          <span class="dp-label">ВЫХОД</span>
+          <span class="dp-value"><i class="dot"></i>CABLE Input</span>
+        </span>
+        <svg class="dp-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="icon-btn active" title="Мониторинг в наушниках">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="7" rx="2"/><rect x="17" y="14" width="4" height="7" rx="2"/></svg>
+      </button>
+      <button class="icon-btn" title="Настройки" onclick="openSettings()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="win-controls">
+        <button class="win-btn" title="Свернуть"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
+        <button class="win-btn" title="Развернуть"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>
+        <button class="win-btn close" title="Закрыть"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ WORKSPACE ============ -->
+  <div class="workspace">
+    <nav class="rail">
+      <button class="rail-btn active" data-view="sounds" title="Звуки">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+      </button>
+      <button class="rail-btn" data-view="browser" title="Браузер">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/></svg>
+        <i class="rail-dot"></i>
+      </button>
+      <div class="rail-sep"></div>
+      <button class="rail-btn" title="Устройства и микшер" onclick="openSettings()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>
+      </button>
+      <button class="rail-btn" title="Библиотека">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </button>
+      <div class="rail-spacer"></div>
+      <button class="rail-btn" title="Настройки" onclick="openSettings()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </nav>
+
+    <main class="main">
+      <!-- ===== SOUNDBOARD ===== -->
+      <section class="view view-sounds">
+        <div class="library">
+          <div class="lib-head">
+            <div class="lib-title">
+              <h1>Библиотека</h1>
+              <span class="count">20 звуков · 5 категорий</span>
+            </div>
+            <div class="lib-actions">
+              <label class="search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+                <span>Поиск по названию или хоткею…</span>
+              </label>
+              <button class="btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Импорт
+              </button>
+            </div>
+          </div>
+
+          <div class="chips">
+            <button class="chip active">Все <span class="n">20</span></button>
+            <button class="chip">Музыка <span class="n">6</span></button>
+            <button class="chip">Мемы <span class="n">8</span></button>
+            <button class="chip">Эффекты <span class="n">4</span></button>
+            <button class="chip">Избранное <span class="n">3</span></button>
+            <div class="spacer"></div>
+            <div class="sort">Сначала новые
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+
+          <div class="grid" id="pad-grid"></div>
+        </div>
+      </section>
+
+      <!-- ===== BROWSER ===== -->
+      <section class="view view-browser">
+        <div class="browser">
+          <div class="browser-bar">
+            <div class="nav-btns">
+              <button class="icon-btn" title="Назад">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+              </button>
+              <button class="icon-btn" title="Вперёд">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+              <button class="icon-btn" title="Обновить">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6.7"/><path d="M20 4v7h-7"/></svg>
+              </button>
+              <button class="icon-btn" title="Домой">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>
+              </button>
+            </div>
+            <div class="urlbar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              <span><span class="domain">music.youtube.com</span><span class="path"> / explore</span></span>
+              <span class="grow"></span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8 8l4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+            </div>
+            <div class="browser-actions">
+              <button class="icon-btn" title="Громкость сайта">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l6 5V4L8 9z"/><path d="M17 8.5a5 5 0 0 1 0 7"/></svg>
+              </button>
+              <button class="icon-btn" title="Открыть в системном браузере">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4L10 14"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="webpage">
+            <div class="web-capture-chip"><i class="live-dot"></i> звук → микшер</div>
+            <div class="ytm">
+              <div class="ytm-top">
+                <div class="ytm-logo"><span class="ytm-mark">▶</span> YouTube Music</div>
+                <div class="ytm-search">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+                  Поиск в YouTube Music
+                </div>
+                <div class="ytm-me"></div>
+              </div>
+              <div class="ytm-body">
+                <nav class="ytm-nav">
+                  <div class="active"><span class="ni">⌂</span> Главная</div>
+                  <div><span class="ni">◈</span> Исследовать</div>
+                  <div><span class="ni">▤</span> Библиотека</div>
+                  <div class="sep"></div>
+                  <div class="lbl">ПЛЕЙЛИСТЫ</div>
+                  <div><span class="ni">♪</span> Микс дня</div>
+                  <div><span class="ni">♡</span> Мне нравится</div>
+                  <div><span class="ni">↻</span> Недавние</div>
+                </nav>
+                <div class="ytm-scroll">
+                  <h2>Добрый вечер</h2>
+                  <div class="cards">
+                    <div class="card"><div class="cover g1"></div><div class="t">Слушать снова</div><div class="s">42 трека</div></div>
+                    <div class="card"><div class="cover g2"></div><div class="t">Новые релизы</div><div class="s">Для вас</div></div>
+                    <div class="card"><div class="cover g3"></div><div class="t">Микс дня</div><div class="s">FreeSoundPad Radio</div></div>
+                    <div class="card"><div class="cover g4"></div><div class="t">Электроника</div><div class="s">Подборка</div></div>
+                    <div class="card"><div class="cover g5"></div><div class="t">Спокойное</div><div class="s">Фокус</div></div>
+                  </div>
+                  <div class="ytm-row-head"><h3>Микс дня</h3><span>Слушать все</span></div>
+                  <div class="rows">
+                    <div class="row"><div class="num">1</div><div class="rt"><b>Vine Boom (Sped Up)</b><small>FreeSoundPad Radio</small></div><div class="len">0:03</div></div>
+                    <div class="row"><div class="num">2</div><div class="rt"><b>Midnight Drive</b><small>Neon Coast</small></div><div class="len">3:41</div></div>
+                    <div class="row"><div class="num">3</div><div class="rt"><b>Airhorn Anthem</b><small>Meme Orchestra</small></div><div class="len">2:12</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="ytm-player">
+                <div class="np-art"></div>
+                <div class="np-meta"><b>Vine Boom (Sped Up)</b><small>FreeSoundPad Radio</small></div>
+                <div class="np-ctrl">
+                  <span class="c">⏮</span>
+                  <span class="play">▶</span>
+                  <span class="c">⏭</span>
+                </div>
+                <div class="np-prog"><span>0:01</span><div class="bar"><i></i></div><span>0:03</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== MIXER SIDE ===== -->
+    <aside class="side side-mixer">
+      <div class="mixer">
+        <div class="mix-head">
+          <span class="mix-title">МИКШЕР</span>
+          <button class="link">Сброс</button>
+        </div>
+
+        <div class="now-card">
+          <div class="now-label"><i class="live-dot"></i> СЕЙЧАС В ЭФИРЕ</div>
+          <div class="now-row">
+            <span class="now-name">Vine Boom</span>
+            <span class="now-time">0:01 / 0:03</span>
+          </div>
+          <div class="now-bar"><i></i></div>
+          <div class="now-meta">PAD · хоткей Num 2 · один из 20</div>
+        </div>
+
+        <div class="fader-bank">
+          <div class="strip" style="--c:63,224,176">
+            <div class="strip-name">MIC</div>
+            <div class="strip-dev" title="fifine Microphone">fifine</div>
+            <div class="strip-body">
+              <div class="fader-v" style="--v:72%"><span class="fill"></span><span class="thumb"></span></div>
+              <div class="ladder" data-level="64"></div>
+            </div>
+            <div class="strip-val">72%</div>
+            <button class="strip-mute">M</button>
+          </div>
+          <div class="strip" style="--c:155,140,255">
+            <div class="strip-name">PAD</div>
+            <div class="strip-dev">панель</div>
+            <div class="strip-body">
+              <div class="fader-v" style="--v:88%"><span class="fill"></span><span class="thumb"></span></div>
+              <div class="ladder" data-level="78"></div>
+            </div>
+            <div class="strip-val">88%</div>
+            <button class="strip-mute">M</button>
+          </div>
+          <div class="strip" style="--c:76,201,240">
+            <div class="strip-name">WEB</div>
+            <div class="strip-dev">браузер</div>
+            <div class="strip-body">
+              <div class="fader-v" style="--v:64%"><span class="fill"></span><span class="thumb"></span></div>
+              <div class="ladder" data-level="52"></div>
+            </div>
+            <div class="strip-val">64%</div>
+            <button class="strip-mute">M</button>
+          </div>
+        </div>
+
+        <div class="switches">
+          <label class="switch-row"><span>Микрофон в эфир</span><i class="switch on"><i></i></i></label>
+          <label class="switch-row"><span>Мониторинг в наушники</span><i class="switch on"><i></i></i></label>
+        </div>
+
+        <div class="out-card">
+          <div class="out-label">ВЫХОД</div>
+          <div class="out-dev">
+            <span class="ic">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l6 5V4L8 9z"/><path d="M17 8.5a5 5 0 0 1 0 7"/></svg>
+            </span>
+            <span class="txt"><b>CABLE Input</b><small>VB-Audio Virtual Cable</small></span>
+          </div>
+          <div class="out-hint">В Discord выбери микрофон <b>CABLE Output</b> — услышат всё, что идёт в эфир.</div>
+          <div class="master-row"><span>MASTER</span><b>90%</b></div>
+          <div class="master-vu" data-level="72"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== CAPTURE SIDE ===== -->
+    <aside class="side side-capture">
+      <div class="capture">
+        <div class="cap-title">БРАУЗЕР → МИКШЕР</div>
+
+        <div class="cap-status">
+          <div class="cap-status-top"><i class="live-dot"></i> Захват активен</div>
+          <div class="cap-sub">msedgewebview2.exe · PID 24816<br>дерево процессов · WASAPI loopback</div>
+          <div class="cap-wave" data-level="58"></div>
+          <div class="cap-vu" data-level="58"></div>
+          <div class="cap-db"><span>−14 dB</span><span>48 kHz · stereo</span></div>
+        </div>
+
+        <label class="cap-switch">
+          <span class="cs-t"><b>Отправлять в микрофон</b><small>звук сайта идёт в кабель</small></span>
+          <i class="switch on"><i></i></i>
+        </label>
+
+        <label class="cap-switch">
+          <span class="cs-t"><b>Слышать локально</b><small>мониторинг в наушники</small></span>
+          <i class="switch"><i></i></i>
+        </label>
+
+        <div class="route-card">
+          <div class="route-label">МАРШРУТ СИГНАЛА</div>
+          <div class="route-row">
+            <span class="route-node">
+              <span class="ic">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg>
+              </span>Браузер
+            </span>
+            <i class="route-line"></i>
+            <span class="route-node"><span class="ic web">WEB</span></span>
+            <i class="route-line"></i>
+            <span class="route-node">
+              <span class="ic">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+              </span>Микрофон
+            </span>
+          </div>
+          <div class="route-hint">Звук сайта смешивается с падами и голосом и уходит в CABLE Input.</div>
+        </div>
+
+        <div class="cap-info">
+          <div><span>Источник</span><b>только этот браузер</b></div>
+          <div><span>Задержка</span><b>≈ 65 мс</b></div>
+          <div><span>Буфер</span><b>30 мс</b></div>
+          <div><span>Процесс</span><b>PID 24816</b></div>
+        </div>
+
+        <button class="btn-outline">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 6.7"/><path d="M20 4v7h-7"/></svg>
+          Перезапустить захват
+        </button>
+
+        <div class="cap-exclude">
+          <div class="ex-title">НЕ ПОПАДАЕТ В ЗАХВАТ</div>
+          <div class="ex-row">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            системные звуки и уведомления
+          </div>
+          <div class="ex-row">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            другие приложения и игры
+          </div>
+          <div class="ex-row">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            голос собеседников из чата
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ STATUS BAR ============ -->
+  <footer class="statusbar">
+    <button class="stop-btn">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+      СТОП ВСЁ
+      <kbd>Ctrl Alt X</kbd>
+    </button>
+
+    <div class="master-meter">
+      <span>ВЫХОД</span>
+      <div class="vu" data-level="66"></div>
+      <span class="db">-6 dB</span>
+    </div>
+
+    <div class="status-right">
+      <div class="status-chip on">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="7" rx="2"/><rect x="17" y="14" width="4" height="7" rx="2"/></svg>
+        Наушники
+      </div>
+      <div class="status-chip on">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+        Микрофон в эфир
+      </div>
+      <span class="status-meta">48 kHz · буфер 30 мс · CPU 0.8%</span>
+    </div>
+  </footer>
+
+  <!-- ============ SETTINGS ============ -->
+  <div class="settings-layer" onclick="if(event.target===this) closeSettings()">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:baseline">
+          <h2>Настройки</h2><span class="sub">Звук, маршрутизация, захват</span>
+        </div>
+        <button class="icon-btn" onclick="closeSettings()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <section class="form-section">
+          <h3>АУДИОУСТРОЙСТВА</h3>
+          <div class="form-grid">
+            <label class="field"><span>МИКРОФОН</span>
+              <select><option>fifine Microphone</option><option>PicoStreamingMicrophone</option><option>Steam Streaming Microphone</option></select>
+            </label>
+            <label class="field"><span>ВИРТУАЛЬНЫЙ ВЫХОД</span>
+              <select><option>CABLE Input (VB-Audio Virtual Cable)</option><option>Pico Streaming Speaker</option><option>Steam Streaming Speakers</option></select>
+            </label>
+            <label class="field"><span>МОНИТОРИНГ</span>
+              <select><option>Наушники (AirPods Pro)</option><option>Не использовать</option><option>Динамики (Realtek)</option></select>
+            </label>
+            <label class="field"><span>ФОРМАТ / БУФЕР</span>
+              <select><option>48 kHz · 30 мс</option><option>48 kHz · 20 мс</option><option>44.1 kHz · 40 мс</option></select>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3>ВИРТУАЛЬНЫЙ КАБЕЛЬ <span class="badge ok">НАЙДЕН</span></h3>
+          <div class="cable-card">
+            <div class="cable-line">
+              <b>CABLE Input (VB-Audio Virtual Cable)</b>
+              <span>выход приложения</span>
+            </div>
+            <ol class="steps">
+              <li><b>1</b><span>В Discord (или другом чате) открой <code>Настройки → Голос и видео</code>.</span></li>
+              <li><b>2</b><span>Устройство ввода выбери <code>CABLE Output (VB-Audio Virtual Cable)</code>.</span></li>
+              <li><b>3</b><span>Отключи шумоподавление Discord — иначе он съест звуки падов.</span></li>
+            </ol>
+            <div class="test-line">
+              <button class="btn-outline">▶ Тест маршрута</button>
+              <div class="vu" data-level="44"></div>
+              <span class="db">-18 dB</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3>ЗАХВАТ БРАУЗЕРА</h3>
+          <div class="switch-list">
+            <label class="switch-row">
+              <span><b>Захватывать звук встроенного браузера</b><small>WASAPI process loopback, только дерево процессов WebView2</small></span>
+              <i class="switch on"><i></i></i>
+            </label>
+            <label class="switch-row">
+              <span><b>Автовоспроизведение на сайтах</b><small>разрешить звук без клика по странице</small></span>
+              <i class="switch on"><i></i></i>
+            </label>
+            <label class="switch-row">
+              <span><b>Останавливать страницу при выходе</b><small>выключить звук сайта при закрытии окна</small></span>
+              <i class="switch"><i></i></i>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3>ГОРЯЧИЕ КЛАВИШИ</h3>
+          <div class="hotkeys">
+            <div class="hk-row"><span>Стоп всё</span><span class="key-group"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>X</kbd><span class="edit">изменить</span></span></div>
+            <div class="hk-row"><span>Микрофон в эфир</span><span class="key-group"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>M</kbd><span class="edit">изменить</span></span></div>
+            <div class="hk-row"><span>Отправка браузера</span><span class="key-group"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>B</kbd><span class="edit">изменить</span></span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-foot">
+        <span class="foot-note">Изменения применяются сразу · настройки сохраняются автоматически</span>
+        <div class="foot-actions">
+          <button class="btn-ghost" onclick="closeSettings()">Закрыть</button>
+          <button class="btn-primary" onclick="closeSettings()">Готово</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---------- pads ---------- */
+  const palette = ['255,107,107','255,180,84','163,230,53','74,222,128','45,212,191','56,189,248','129,140,248','192,132,252','244,114,182','251,113,133','250,204,21','96,165,250'];
+  const names = ['Airhorn','Vine Boom','Bruh','Discord Ping','Пиу-пиу','Windows Error','Рикролл','Sad Violin','Кринж','Оу-у-у','Nope','Bass Drop','Тада!','Барабан','Смех','Ауф','Windows XP','Хрясь','Металлик','Bruh Moment','Бабушка','Скрепка','Мяу','Тревога'];
+  const durs = ['0:02','0:03','0:01','0:04','0:02','0:03','0:12','0:07','0:05','0:02','0:01','0:06','0:02','0:04','0:05','0:03','0:02','0:01','0:08','0:02','0:03','0:04','0:01','0:09'];
+
+  function padKey(i){
+    if (i < 10) return 'Num ' + (i === 9 ? 0 : i + 1);
+    if (i < 20) return 'Ctrl+Num ' + (i === 19 ? 0 : (i - 9));
+    return '';
+  }
+  function barsFor(i){
+    let seed = i * 97 + 13;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    return Array.from({length: 20}, () => 3 + Math.round(rnd() * 15) + 'px').map((h) => `<i style="height:${h}"></i>`).join('');
+  }
+
+  const grid = document.getElementById('pad-grid');
+  names.slice(0, 20).forEach((name, i) => {
+    const playing = i === 1;
+    const el = document.createElement('button');
+    el.className = 'pad' + (playing ? ' playing' : '') + (i === 12 ? ' flash' : '');
+    el.style.setProperty('--c', palette[i % palette.length]);
+    el.innerHTML = `
+      <div class="pad-top">
+        <span class="pad-key ${padKey(i) ? '' : 'empty'}">${padKey(i) || '—'}</span>
+        <span class="pad-dur">${playing
+          ? '<svg class="ic" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
+          : durs[i]}</span>
+      </div>
+      <div class="pad-name">${name}</div>
+      <div class="pad-wave">${barsFor(i)}</div>
+      ${playing ? '<div class="pad-progress" style="width:38%"></div>' : ''}
+    `;
+    grid.appendChild(el);
+  });
+
+  /* ---------- meters ---------- */
+  function paintMeter(el, total) {
+    const level = parseInt(el.dataset.level, 10) || 0;
+    const lit = Math.round(level / 100 * total);
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      const on = i < lit;
+      const hue = 152 - (i / total) * 118;
+      const color = on ? `hsl(${hue} 78% 56%)` : 'rgba(255,255,255,.065)';
+      const glow = on ? `box-shadow:0 0 6px hsl(${hue} 80% 50% / .55)` : '';
+      html += `<i style="background:${color};${glow}"></i>`;
+    }
+    el.innerHTML = html;
+  }
+  document.querySelectorAll('.vu[data-level], .cap-vu[data-level], .master-vu[data-level]').forEach(el => paintMeter(el, 18));
+  document.querySelectorAll('.ladder[data-level]').forEach(el => paintMeter(el, 16));
+
+  /* ---------- browser capture waveform ---------- */
+  document.querySelectorAll('.cap-wave').forEach((el, ci) => {
+    let seed = ci * 131 + 17;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    el.innerHTML = Array.from({ length: 46 }, () => {
+      const h = 14 + Math.round(rnd() * 84);
+      return `<i style="height:${h}%"></i>`;
+    }).join('');
+  });
+
+  /* ---------- navigation ---------- */
+  function setView(v){
+    document.body.dataset.view = v;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+    document.querySelectorAll('.rail-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  }
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
+  document.querySelectorAll('.rail-btn[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+
+  function openSettings(){ document.body.classList.add('settings-open'); }
+  function closeSettings(){ document.body.classList.remove('settings-open'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
+</script>
+</body>
+</html>

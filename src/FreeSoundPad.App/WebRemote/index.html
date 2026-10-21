@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#060a10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FreeSoundPad Remote</title>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <section class="login" id="login">
+        <div class="login-card">
+            <img class="login-icon" src="/icon.png" alt="" width="56" height="56">
+            <p class="kicker">local remote</p>
+            <h1>Веб-пульт<br>FreeSoundPad</h1>
+            <p class="login-copy">Введи код доступа из настроек приложения — и управляй падами с телефона.</p>
+            <form id="loginForm" autocomplete="off">
+                <input id="tokenInput" name="token" type="text" inputmode="text" autocapitalize="characters"
+                       autocomplete="off" spellcheck="false" maxlength="24" placeholder="код доступа" aria-label="Код доступа">
+                <button type="submit" class="button button-primary">Подключиться</button>
+            </form>
+            <p class="login-error" id="loginError" role="alert"></p>
+            <p class="login-hint">FreeSoundPad → Настройки → Веб-пульт</p>
+        </div>
+    </section>
+
+    <div class="app" id="app" hidden>
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="FreeSoundPad Remote">
+                <img src="/icon.png" alt="" width="34" height="34">
+                <span class="brand-copy">
+                    <strong>FreeSoundPad</strong>
+                    <small>remote deck</small>
+                </span>
+            </a>
+            <div class="connection" id="connection" aria-live="polite">
+                <i aria-hidden="true"></i>
+                <span id="connectionText">подключение</span>
+            </div>
+            <button class="icon-button" type="button" id="favoritesOpen" aria-label="Избранное" aria-controls="favSheet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <span class="icon-badge" id="favoritesCount">0</span>
+            </button>
+            <button class="icon-button" type="button" id="settingsOpen" aria-label="Настройки" aria-controls="sheet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-1.9-.7a6.7 6.7 0 0 0-.6-1.5l.9-1.8-2.4-2.4-1.8.9A6.7 6.7 0 0 0 12.7 5L12 3H9l-.7 2c-.5.1-1 .3-1.5.6l-1.8-.9-2.4 2.4.9 1.8c-.3.5-.5 1-.6 1.5L1 12v3l1.9.7c.1.5.3 1 .6 1.5l-.9 1.8 2.4 2.4 1.8-.9c.5.3 1 .5 1.5.6L9 23h3l.7-2c.5-.1 1-.3 1.5-.6l1.8.9 2.4-2.4-.9-1.8c.3-.5.5-1 .6-1.5L23 15v-3Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            </button>
+        </header>
+
+        <main class="main">
+            <section class="now-card" id="nowCard" aria-labelledby="nowTitle">
+                <div class="now-top">
+                    <span class="kicker">Сейчас в эфире</span>
+                    <span class="state-badge" id="nowState">тишина</span>
+                </div>
+                <h1 id="nowTitle">Тишина</h1>
+                <p id="nowMeta">Выбери звук или нажми хоткей в приложении</p>
+                <div class="now-progress" aria-hidden="true"><i id="nowProgress"></i></div>
+                <div class="now-bottom">
+                    <span class="mono" id="nowTime">—</span>
+                    <button type="button" class="small-button" id="stopNow">Стоп</button>
+                </div>
+            </section>
+
+            <section class="library" aria-labelledby="libraryTitle">
+                <div class="library-head">
+                    <div>
+                        <p class="kicker">Библиотека</p>
+                        <h2 id="libraryTitle">Пады</h2>
+                    </div>
+                    <span class="library-count mono" id="libraryCount">0</span>
+                </div>
+                <div class="toolbar">
+                    <label class="search">
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m13 13 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <input id="searchInput" type="search" placeholder="Найти звук" autocomplete="off" aria-label="Поиск">
+                    </label>
+                    <select id="categorySelect" aria-label="Категория">
+                        <option value="all">Все</option>
+                        <option value="favorites">Избранное</option>
+                    </select>
+                </div>
+                <div class="pads-grid" id="padsGrid"></div>
+                <div class="empty" id="empty" hidden>
+                    <strong>Ничего не найдено</strong>
+                    <span>Измени запрос или категорию.</span>
+                </div>
+                <button type="button" class="load-more" id="loadMore" hidden>Показать ещё</button>
+            </section>
+        </main>
+
+        <footer class="dock" aria-label="Быстрое управление">
+            <button type="button" class="dock-button dock-stop" id="stopAll">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
+                <span>Стоп всё</span>
+            </button>
+            <button type="button" class="dock-button" data-toggle="micPassthrough" id="micButton">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span>Мик</span>
+            </button>
+            <button type="button" class="dock-button" data-toggle="browserSend" id="browserButton">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 7h15M6 11h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span>Браузер</span>
+            </button>
+            <button type="button" class="dock-button" data-toggle="monitorEnabled" id="monitorButton">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h2l2.2-5 3 10 2-7 1.3 2H17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Монитор</span>
+            </button>
+        </footer>
+    </div>
+
+    <div class="fav-layer" id="favLayer" hidden>
+        <div class="fav-backdrop" id="favBackdrop"></div>
+        <aside class="fav-sheet" id="favSheet" role="dialog" aria-modal="true" aria-labelledby="favTitle">
+            <header class="fav-head">
+                <div>
+                    <p class="kicker">Быстрый доступ</p>
+                    <h2 id="favTitle">Избранное</h2>
+                </div>
+                <div class="fav-head-actions">
+                    <span class="fav-count" id="favCount">0</span>
+                    <button class="icon-button" type="button" id="favClose" aria-label="Закрыть избранное">
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </header>
+            <div class="fav-list" id="favList"></div>
+            <div class="fav-empty" id="favEmpty" hidden>
+                <span class="fav-empty-icon" aria-hidden="true">★</span>
+                <strong>Пока пусто</strong>
+                <span>Отметь звуки звёздочкой в приложении — они появятся здесь.</span>
+            </div>
+            <footer class="fav-foot">Избранное синхронизируется с библиотекой в приложении.</footer>
+        </aside>
+    </div>
+
+    <div class="sheet-layer" id="sheetLayer" hidden>
+        <div class="sheet-backdrop" id="sheetBackdrop"></div>
+        <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+            <header class="sheet-head">
+                <div>
+                    <p class="kicker">Пульт</p>
+                    <h2 id="sheetTitle">Настройки</h2>
+                </div>
+                <button class="icon-button" type="button" id="sheetClose" aria-label="Закрыть настройки">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+            </header>
+            <div class="sheet-body">
+                <section class="sheet-section">
+                    <h3>В эфире</h3>
+                    <label class="setting-row">
+                        <span>Микрофон<small>голос уходит в кабель</small></span>
+                        <input class="switch" type="checkbox" data-setting="micPassthrough">
+                    </label>
+                    <label class="setting-row">
+                        <span>Мониторинг<small>слушать пады в наушниках</small></span>
+                        <input class="switch" type="checkbox" data-setting="monitorEnabled">
+                    </label>
+                    <label class="setting-row">
+                        <span>Захват браузера<small>звук встроенного браузера</small></span>
+                        <input class="switch" type="checkbox" data-setting="browserCaptureEnabled">
+                    </label>
+                    <label class="setting-row">
+                        <span>Браузер в микрофон<small>отправлять звук сайта в эфир</small></span>
+                        <input class="switch" type="checkbox" data-setting="browserSend">
+                    </label>
+                    <label class="setting-row">
+                        <span>Слышать браузер<small>копия звука сайта в наушники</small></span>
+                        <input class="switch" type="checkbox" data-setting="browserMonitor">
+                    </label>
+                    <label class="setting-row">
+                        <span>Звук браузера выключен<small>мьют встроенного браузера</small></span>
+                        <input class="switch" type="checkbox" data-setting="browserMuted">
+                    </label>
+                    <label class="setting-row">
+                        <span>Оверлей<small>пульт поверх игры</small></span>
+                        <input class="switch" type="checkbox" data-setting="overlayVisible">
+                    </label>
+                </section>
+
+                <section class="sheet-section">
+                    <h3>Уровни</h3>
+                    <label class="range-row">
+                        <span>Мастер</span>
+                        <output data-output="masterGain">90%</output>
+                        <input type="range" min="0" max="100" step="1" data-gain="masterGain" aria-label="Мастер">
+                    </label>
+                    <label class="range-row">
+                        <span>Микрофон</span>
+                        <output data-output="micGain">80%</output>
+                        <input type="range" min="0" max="100" step="1" data-gain="micGain" aria-label="Микрофон">
+                    </label>
+                    <label class="range-row">
+                        <span>Пады</span>
+                        <output data-output="padGain">90%</output>
+                        <input type="range" min="0" max="100" step="1" data-gain="padGain" aria-label="Пады">
+                    </label>
+                    <label class="range-row">
+                        <span>Браузер</span>
+                        <output data-output="webGain">80%</output>
+                        <input type="range" min="0" max="100" step="1" data-gain="webGain" aria-label="Браузер">
+                    </label>
+                    <label class="range-row">
+                        <span>Монитор</span>
+                        <output data-output="monitorGain">80%</output>
+                        <input type="range" min="0" max="100" step="1" data-gain="monitorGain" aria-label="Монитор">
+                    </label>
+                </section>
+
+                <section class="sheet-section">
+                    <h3>Браузер</h3>
+                    <div class="browser-info">
+                        <strong id="browserTitle">Не открыт</strong>
+                        <span class="mono" id="browserUrl">—</span>
+                    </div>
+                    <form class="nav-form" id="navForm">
+                        <input id="navInput" type="text" placeholder="youtube.com" autocomplete="off" spellcheck="false" aria-label="Адрес сайта">
+                        <button type="submit" class="small-button">Открыть</button>
+                    </form>
+                </section>
+
+                <section class="sheet-section">
+                    <h3>Выход</h3>
+                    <div class="output-info">
+                        <strong id="outputDevice">—</strong>
+                        <span id="outputHint">—</span>
+                    </div>
+                    <p class="sheet-note">Изменения сразу применяются в FreeSoundPad и сохраняются в конфиг. Код доступа и порт меняются в настройках приложения.</p>
+                </section>
+            </div>
+        </aside>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+</body>
+</html>
