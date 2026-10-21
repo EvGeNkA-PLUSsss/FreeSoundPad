@@ -2,6 +2,8 @@
 
 `FreeSoundPad-1.0-win-x64.zip` — self-contained сборка приложения для **Windows 10 2004+ / Windows 11 x64**.
 
+Лицензия: **GNU Affero General Public License v3.0 (AGPL-3.0-only)**. Полный текст — в [`LICENSE`](../LICENSE) репозитория.
+
 - .NET устанавливать не нужно.
 - WebView2 Runtime на Windows 11 обычно уже есть; на Windows 10 может потребоваться доустановка.
 - Для отправки звука в микрофон нужен виртуальный аудиокабель, например VB-CABLE.
