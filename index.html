@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FreeSoundPad — звук из браузера прямо в микрофон</title>
+    <meta name="description" content="FreeSoundPad — звуковая панель и встроенный браузер для Windows. Пады, музыка и звук сайтов уходят в виртуальный микрофон. Захватывается только браузер, а не вся система.">
+    <meta name="theme-color" content="#05080d">
+    <meta property="og:title" content="FreeSoundPad — звук из браузера прямо в микрофон">
+    <meta property="og:description" content="Пады, музыка и звук сайтов в одном виртуальном микрофоне. Windows 10/11, portable, без установки .NET.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/og.png">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="assets/app-icon.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Перейти к содержимому</a>
+
+    <div class="page">
+        <header class="topbar" id="top">
+            <a class="brand" href="#top" aria-label="FreeSoundPad — на главную">
+                <img src="assets/app-icon.png" alt="" width="36" height="36">
+                <span class="brand-copy">
+                    <strong>FreeSoundPad</strong>
+                    <span>soundboard / browser / mic</span>
+                </span>
+            </a>
+
+            <nav class="nav" id="nav" aria-label="Основная навигация">
+                <a href="#features">Возможности</a>
+                <a href="#web-remote">Веб-пульт</a>
+                <a href="#showcase">Экраны</a>
+                <a href="#setup">Настройка</a>
+                <a href="#hotkeys">Хоткеи</a>
+                <a href="#faq">Вопросы</a>
+            </nav>
+
+            <div class="top-actions">
+                <span class="platform"><i aria-hidden="true"></i> Windows 10/11 · x64</span>
+                <a class="button button-primary button-small" href="https://github.com/EvGeNkA-PLUSsss/FreeSoundPad/releases/latest/download/FreeSoundPad.exe" download>
+                    Скачать
+                    <span class="button-meta">147 МБ</span>
+                </a>
+                <button class="menu-toggle" type="button" aria-controls="nav" aria-expanded="false" aria-label="Открыть меню">
+                    <span></span><span></span>
+                </button>
+            </div>
+        </header>
+
+        <main id="main">
+            <section class="hero" aria-labelledby="hero-title">
+                <div class="hero-copy">
+                    <p class="readout"><span class="signal-dot" aria-hidden="true"></span> Только звук встроенного браузера — не всей системы</p>
+                    <h1 id="hero-title">Звук из браузера<br><span class="hero-mark">прямо в микрофон.</span></h1>
+                    <p class="lede">FreeSoundPad собирает пады, музыку и сайты в один виртуальный кабель. Голос, мемы и треки из встроенного браузера уходят собеседникам — без системного шума и лишних приложений.</p>
+
+                    <div class="hero-actions">
+                        <a class="button button-primary button-large" href="https://github.com/EvGeNkA-PLUSsss/FreeSoundPad/releases/latest/download/FreeSoundPad.exe" download>
+                            Скачать для Windows
+                            <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+                        <a class="button button-quiet button-large" href="#showcase">Посмотреть экраны</a>
+                    </div>
+
+                    <dl class="hero-facts" aria-label="Характеристики">
+                        <div>
+                            <dt>Аудио</dt>
+                            <dd>48 kHz · stereo</dd>
+                        </div>
+                        <div>
+                            <dt>Захват</dt>
+                            <dd>process loopback</dd>
+                        </div>
+                        <div>
+                            <dt>Установка</dt>
+                            <dd>portable .exe</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <aside class="console" aria-label="Превью интерфейса FreeSoundPad">
+                    <span class="console-screw screw-tl" aria-hidden="true"></span>
+                    <span class="console-screw screw-tr" aria-hidden="true"></span>
+                    <span class="console-screw screw-bl" aria-hidden="true"></span>
+                    <span class="console-screw screw-br" aria-hidden="true"></span>
+
+                    <div class="console-head">
+                        <span class="console-name">FreeSoundPad <b>/</b> live</span>
+                        <span class="on-air"><i aria-hidden="true"></i> on air</span>
+                    </div>
+
+                    <div class="console-screen">
+                        <img class="screen-main" src="assets/sounds.png" alt="Библиотека звуков FreeSoundPad" width="1440" height="900">
+                        <img class="screen-float" src="assets/overlay-large.png" alt="Оверлей FreeSoundPad поверх игры" width="949" height="228">
+                        <span class="screen-scan" aria-hidden="true"></span>
+                    </div>
+
+                    <div class="console-meters" aria-hidden="true">
+                        <div class="meter">
+                            <span class="meter-label">mic</span>
+                            <span class="meter-track"><i style="--level: 72%"></i></span>
+                            <span class="meter-value">-12</span>
+                        </div>
+                        <div class="meter">
+                            <span class="meter-label">pad</span>
+                            <span class="meter-track"><i style="--level: 86%"></i></span>
+                            <span class="meter-value">-6</span>
+                        </div>
+                        <div class="meter">
+                            <span class="meter-label">web</span>
+                            <span class="meter-track"><i style="--level: 54%"></i></span>
+                            <span class="meter-value">-18</span>
+                        </div>
+                    </div>
+
+                    <div class="console-foot">
+                        <span class="console-caption">master</span>
+                        <span class="master-rail"><i></i></span>
+                        <span class="console-value">86%</span>
+                        <span class="hotkey-chip"><span>*</span> + 1</span>
+                        <span class="hotkey-chip"><span>*</span> + 2</span>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="signal-rail" aria-label="Маршрут звука">
+                <div class="signal-path">
+                    <span class="signal-node">mic</span>
+                    <span class="signal-node">pad</span>
+                    <span class="signal-node">web</span>
+                    <span class="signal-line" aria-hidden="true"></span>
+                    <span class="signal-node signal-node-accent">limiter</span>
+                    <span class="signal-line" aria-hidden="true"></span>
+                    <span class="signal-node signal-node-cable">cable input</span>
+                </div>
+                <canvas id="signalCanvas" aria-hidden="true"></canvas>
+                <p class="signal-note">Один микс. Ничего лишнего.</p>
+            </section>
+
+            <section class="section features" id="features" aria-labelledby="features-title">
+                <header class="section-head">
+                    <p class="section-kicker">Что внутри</p>
+                    <h2 id="features-title">Один канал.<br>Весь нужный звук.</h2>
+                    <p class="section-lede">Не «ещё один SoundPad», а рабочий аудиомаршрут: библиотека, браузер и микрофон сходятся в мастер-шине и уходят туда, где тебя слышат.</p>
+                </header>
+
+                <div class="feature-grid">
+                    <article class="feature feature-wide feature-browser">
+                        <div class="feature-copy">
+                            <p class="feature-kicker">process loopback</p>
+                            <h3>Слышно только вкладку</h3>
+                            <p>Встроенный браузер на WebView2 захватывается по дереву процессов. Системные уведомления, голосовой чат и другие приложения в микрофон не попадают.</p>
+                            <p class="feature-micro">msedgewebview2.exe <span>→</span> wasapi loopback <span>→</span> mic</p>
+                        </div>
+                        <div class="browser-sketch" aria-hidden="true">
+                            <div class="sketch-bar"><i></i><i></i><i></i><span>freesoundpad://start</span></div>
+                            <div class="sketch-body">
+                                <span class="sketch-tab"></span>
+                                <span class="sketch-tab"></span>
+                                <span class="sketch-tab"></span>
+                                <div class="sketch-card"></div>
+                                <div class="sketch-card"></div>
+                                <div class="sketch-card"></div>
+                            </div>
+                            <span class="sketch-capture">captured</span>
+                        </div>
+                    </article>
+
+                    <article class="feature feature-one">
+                        <p class="feature-kicker">one at a time</p>
+                        <h3>Один пад. Без каши.</h3>
+                        <p>Новый звук останавливает предыдущий. Можно быстро переключать мемы, не собирая из них невольный ремикс.</p>
+                        <div class="stack-demo" aria-hidden="true">
+                            <span class="stack-row"><b>01</b><i></i><em>playing</em></span>
+                            <span class="stack-row is-off"><b>02</b><i></i><em>queued</em></span>
+                            <span class="stack-row is-off"><b>03</b><i></i><em>queued</em></span>
+                        </div>
+                    </article>
+
+                    <article class="feature feature-library">
+                        <p class="feature-kicker">large library</p>
+                        <h3>1000 файлов не тормозят</h3>
+                        <p>Библиотека выдаётся порциями по 60 карточек. Поиск с задержкой ввода, а прогресс обновляется только у активного пада.</p>
+                        <p class="feature-counter"><strong>1000</strong> <span>звуков в тесте</span></p>
+                    </article>
+
+                    <article class="feature feature-wide feature-browser-audio">
+                        <div class="feature-copy">
+                            <p class="feature-kicker">browser audio</p>
+                            <h3>Чистый звук браузера</h3>
+                            <p>Звук сайта идёт в микрофон или в наушники одной чистой копией — без двойного воспроизведения и лишнего шума. Переключатели просто выбирают маршрут.</p>
+                            <ul class="check-list">
+                                <li>«Отправлять в микрофон» — сайт уходит в эфир</li>
+                                <li>«Слышать локально» — сайт играет в наушниках</li>
+                                <li>Можно включить оба — каждый получит чистую копию</li>
+                            </ul>
+                        </div>
+                        <div class="switch-demo" aria-hidden="true">
+                            <div class="switch-row"><span>Отправлять в микрофон</span><i class="switch is-on"></i></div>
+                            <div class="switch-row"><span>Слышать локально</span><i class="switch"></i></div>
+                            <div class="switch-caption">маршрут <b>чистый</b></div>
+                        </div>
+                    </article>
+
+                    <article class="feature feature-overlay">
+                        <div class="feature-copy">
+                            <p class="feature-kicker">overlay</p>
+                            <h3>Пульт поверх игры</h3>
+                            <p>Компактная версия — только пады и стоп. Большая — статусы, браузер, микрофон, мониторинг и настройки. Отдельная громкость мониторинга уже внутри.</p>
+                            <p class="feature-micro">hotkeys <span>·</span> monitor 80% <span>·</span> local / cable</p>
+                        </div>
+                        <div class="overlay-stack" aria-hidden="true">
+                            <img src="assets/overlay-compact.png" alt="" width="354" height="140">
+                            <img src="assets/overlay-large.png" alt="" width="949" height="228">
+                        </div>
+                    </article>
+
+                    <article class="feature feature-remote" id="web-remote">
+                        <div class="feature-copy">
+                            <p class="feature-kicker">web remote</p>
+                            <h3>Пульт в телефоне</h3>
+                            <p>Открой адрес из настроек FreeSoundPad в браузере телефона — и управляй падами, избранным, стопом, микрофоном, браузером и уровнями. Без установки второго приложения.</p>
+                            <ul class="check-list">
+                                <li>Избранное — отдельным меню быстрого доступа</li>
+                                <li>Поиск и фильтр по категориям</li>
+                                <li>Переключатели и уровни без захода в приложение</li>
+                            </ul>
+                            <p class="feature-micro">http://192.168.x.x:8765 <span>·</span> код доступа <span>·</span> только своя сеть</p>
+                            <a class="text-link" href="#setup">Как включить <span aria-hidden="true">→</span></a>
+                        </div>
+                        <div class="remote-device">
+                            <img src="assets/remote.png" alt="Веб-пульт FreeSoundPad на телефоне: пады, поиск, стоп и быстрые переключатели" width="780" height="1688" loading="lazy">
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section showcase" id="showcase" aria-labelledby="showcase-title">
+                <header class="section-head section-head-row">
+                    <div>
+                        <p class="section-kicker">Экраны</p>
+                        <h2 id="showcase-title">Посмотри изнутри</h2>
+                    </div>
+                    <div class="tabs" role="tablist" aria-label="Скриншоты FreeSoundPad">
+                        <button class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="shot-panel" data-shot="sounds">Звуки</button>
+                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="shot-panel" data-shot="browser">Браузер</button>
+                        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="shot-panel" data-shot="settings">Настройки</button>
+                    </div>
+                </header>
+
+                <figure class="shot-panel" id="shot-panel" role="tabpanel" aria-live="polite">
+                    <div class="shot-frame">
+                        <img id="shotImage" src="assets/sounds.png" alt="Библиотека звуков FreeSoundPad: пады, поиск, категории и микшер" width="1440" height="900">
+                        <span class="shot-corner shot-tl" aria-hidden="true"></span>
+                        <span class="shot-corner shot-tr" aria-hidden="true"></span>
+                        <span class="shot-corner shot-bl" aria-hidden="true"></span>
+                        <span class="shot-corner shot-br" aria-hidden="true"></span>
+                    </div>
+                    <figcaption class="shot-caption">
+                        <span id="shotNumber">01</span>
+                        <div>
+                            <strong id="shotTitle">Библиотека и микшер</strong>
+                            <p id="shotText">Пады с цветами, поиск, избранное и три канала MIC / PAD / WEB. Мастер-лимитер держит выход в узде.</p>
+                        </div>
+                        <span id="shotMeta" class="shot-meta">48 kHz · stereo · limiter</span>
+                    </figcaption>
+                </figure>
+
+                <div class="overlay-pair">
+                    <figure class="overlay-figure">
+                        <img src="assets/overlay-large.png" alt="Большой оверлей FreeSoundPad со статусами, падами и кнопками управления" width="949" height="228" loading="lazy">
+                        <figcaption><span>Большой оверлей</span> статусы, браузер, микрофон, мониторинг</figcaption>
+                    </figure>
+                    <figure class="overlay-figure">
+                        <img src="assets/overlay-compact.png" alt="Компактный оверлей FreeSoundPad с падами и кнопкой стоп" width="354" height="140" loading="lazy">
+                        <figcaption><span>Компактный оверлей</span> только пады и стоп</figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <section class="section setup" id="setup" aria-labelledby="setup-title">
+                <header class="section-head">
+                    <p class="section-kicker">Настройка</p>
+                    <h2 id="setup-title">От установки до Discord</h2>
+                    <p class="section-lede">FreeSoundPad не притворяется драйвером. Для микрофона нужен виртуальный кабель — три шага, и тебя слышно.</p>
+                </header>
+
+                <div class="setup-grid">
+                    <ol class="steps">
+                        <li class="step">
+                            <span class="step-num">01</span>
+                            <div>
+                                <h3>Поставь VB-CABLE</h3>
+                                <p>Бесплатный виртуальный кабель. После установки <strong>перезагрузи ПК</strong> — иначе устройства могут появиться, но не пропускать звук.</p>
+                                <a class="text-link" href="https://vb-audio.com/Cable/" target="_blank" rel="noreferrer">vb-audio.com/Cable <span aria-hidden="true">↗</span></a>
+                            </div>
+                        </li>
+                        <li class="step">
+                            <span class="step-num">02</span>
+                            <div>
+                                <h3>Выбери маршрут</h3>
+                                <p>В FreeSoundPad выход — <code>CABLE Input</code>, мониторинг — свои наушники. Включи «Слышать локально», если хочешь контролировать звук.</p>
+                            </div>
+                        </li>
+                        <li class="step">
+                            <span class="step-num">03</span>
+                            <div>
+                                <h3>Включи в Discord</h3>
+                                <p>В настройках голоса выбери микрофон <code>CABLE Output</code>. Нажми «Тест маршрута» в приложении и проверь индикатор.</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <aside class="route-card" aria-label="Схема маршрута">
+                        <p class="route-title">routing / shared mode</p>
+                        <div class="route-row"><span>FreeSoundPad</span><b>mix</b><i></i></div>
+                        <div class="route-arrow" aria-hidden="true">↓</div>
+                        <div class="route-row route-cable"><span>CABLE Input</span><b>playback</b><i></i></div>
+                        <div class="route-arrow" aria-hidden="true">↓</div>
+                        <div class="route-row"><span>Discord</span><b>CABLE Output</b><i></i></div>
+                        <p class="route-note">Рядом — наушники в мониторинге. Это отдельный поток, не микрофон.</p>
+                    </aside>
+                </div>
+
+                <div class="callout">
+                    <span class="callout-mark" aria-hidden="true">!</span>
+                    <p><strong>Нет кабеля?</strong> Приложение работает в локальном режиме: пады слышны в выбранном устройстве, но отправить звук в микрофон нельзя. Без виртуального кабеля никак — это ограничение Windows.</p>
+                </div>
+            </section>
+
+            <section class="section hotkeys" id="hotkeys" aria-labelledby="hotkeys-title">
+                <header class="section-head section-head-row">
+                    <div>
+                        <p class="section-kicker">Хоткеи</p>
+                        <h2 id="hotkeys-title">Руки на клавиатуре</h2>
+                    </div>
+                    <p class="section-lede small">У падов нет биндов по умолчанию — любую клавишу назначаешь сам. Для * + Num 0–9 или / + Num 0–9 нажми * или /, затем цифру. Без Ctrl / Alt / Shift диалог попросит подтвердить Enter.</p>
+                </header>
+
+                <div class="key-console">
+                    <div class="key-group key-group-main">
+                        <span class="key-label">Пады / назначить</span>
+                        <span class="key-combo"><kbd>ПКМ</kbd><span>→</span><kbd>Горячая клавиша…</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Любая клавиша</span>
+                        <span class="key-combo"><kbd>A</kbd><span>…</span><kbd>Num 1</kbd><span>…</span><kbd>F12</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Снять все бинды</span>
+                        <span class="key-combo"><kbd>Настройки</kbd><span>→</span><kbd>Бинды падов</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Стоп всё</span>
+                        <span class="key-combo"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>X</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Микрофон</span>
+                        <span class="key-combo"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>M</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Браузер</span>
+                        <span class="key-combo"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>B</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Мониторинг</span>
+                        <span class="key-combo"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>H</kbd></span>
+                    </div>
+                    <div class="key-group">
+                        <span class="key-label">Оверлей</span>
+                        <span class="key-combo"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>O</kbd></span>
+                    </div>
+                </div>
+                <p class="key-note">Показать окно — <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd>. Работают любые клавиши, включая PrintScreen, F13–F24 и мультимедиа. Для командных хоткеев приложение покажет предупреждение, если система не дала их зарегистрировать.</p>
+            </section>
+
+            <section class="section faq" id="faq" aria-labelledby="faq-title">
+                <header class="section-head">
+                    <p class="section-kicker">Вопросы</p>
+                    <h2 id="faq-title">Коротко о главном</h2>
+                </header>
+
+                <div class="faq-list">
+                    <details>
+                        <summary>Почему нужен VB-CABLE?</summary>
+                        <p>Windows не даёт обычному приложению стать микрофоном. Виртуальный кабель — это отдельное устройство: FreeSoundPad играет в него, а Discord читает из него как из микрофона.</p>
+                    </details>
+                    <details>
+                        <summary>Собеседники услышат системный звук?</summary>
+                        <p>Нет. Захват идёт только по процессу встроенного браузера, а пады и микрофон сводятся в приложении. Уведомления Windows, музыка из других приложений и голос из Discord в эфир не попадают.</p>
+                    </details>
+                    <details>
+                        <summary>Почему сайт не слышно локально?</summary>
+                        <p>Когда включена отправка в микрофон, прямой звук сайта приглушается, чтобы не было эха. Включи «Слышать локально» — появится копия в устройстве мониторинга.</p>
+                    </details>
+                    <details>
+                        <summary>Можно без виртуального кабеля?</summary>
+                        <p>Можно слушать пады и мониторить браузер, но отправить звук в микрофон — нет. Для Discord или игры нужен кабель: VB-CABLE, VoiceMeeter или Virtual Audio Cable.</p>
+                    </details>
+                    <details>
+                        <summary>Потянет ли библиотека на 1000 файлов?</summary>
+                        <p>Да. Список выдаётся порциями по 60 карточек, поиск вводится с задержкой, а прогресс обновляется только у активного пада. Проверено на 1000 звуках.</p>
+                    </details>
+                    <details>
+                        <summary>Это portable?</summary>
+                        <p>Да. Один exe, без установки .NET. Если рядом с exe создать пустой файл <code>portable.txt</code>, данные будут храниться в папке <code>Data</code> рядом с программой.</p>
+                    </details>
+                </div>
+            </section>
+
+            <section class="download-band" aria-labelledby="download-title">
+                <div class="download-copy">
+                    <span class="download-status"><i aria-hidden="true"></i> version 1.0 / windows x64</span>
+                    <h2 id="download-title">Ставь и включай.</h2>
+                    <p>147 МБ · Windows 10 2004+ · без установки .NET · все настройки в одном окне</p>
+                </div>
+                <a class="button button-primary button-large" href="https://github.com/EvGeNkA-PLUSsss/FreeSoundPad/releases/latest/download/FreeSoundPad.exe" download>
+                    Скачать FreeSoundPad
+                    <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-brand">
+                <img src="assets/app-icon.png" alt="" width="28" height="28">
+                <span>FreeSoundPad</span>
+                <span class="footer-version">1.0</span>
+            </div>
+            <nav class="footer-links" aria-label="Ссылки в подвале">
+                <a href="https://github.com/EvGeNkA-PLUSsss/FreeSoundPad/releases/latest/download/FreeSoundPad.exe" download>Скачать</a>
+                <a href="https://github.com/EvGeNkA-PLUSsss/FreeSoundPad#readme">Документация</a>
+                <a href="#setup">Настройка</a>
+                <a href="#faq">Вопросы</a>
+            </nav>
+            <p class="footer-note">Сделано для Windows. Без установки, без подписки, без системного звука в микрофоне.</p>
+        </footer>
+    </div>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
