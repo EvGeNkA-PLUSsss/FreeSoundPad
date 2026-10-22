@@ -11,7 +11,7 @@ public sealed class ProcessLoopbackCapture : IDisposable
 {
     public const int SampleRate = 48000;
     public const int Channels = 2;
-    private const int BitsPerSample = 16;
+    private const int BitsPerSample = 32;
 
     private readonly uint _processId;
     private readonly SampleRingBuffer[] _targets;
@@ -133,7 +133,9 @@ public sealed class ProcessLoopbackCapture : IDisposable
             Marshal.FreeHGlobal(blob);
         }
 
-        // Request 16-bit PCM 48 kHz stereo and let WASAPI convert from the process mix format.
+        // Request 32-bit PCM 48 kHz stereo and let WASAPI convert from the process mix format.
+        // 32-bit samples are needed because the site is attenuated to -80 dB locally while it is
+        // captured; 16-bit capture would quantize that tiny signal and produce audible crackle.
         var format = new WaveFormatEx
         {
             wFormatTag = AudioInterop.WaveFormatPcm,
@@ -249,11 +251,11 @@ public sealed class ProcessLoopbackCapture : IDisposable
                 {
                     unsafe
                     {
-                        var source = (short*)data;
+                        var source = (int*)data;
                         var target = _scratch;
                         for (var i = 0; i < sampleCount; i++)
                         {
-                            target[i] = source[i] / 32768f;
+                            target[i] = source[i] / 2147483648f;
                         }
                     }
                 }

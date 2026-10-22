@@ -7,20 +7,21 @@ namespace FreeSoundPad.App.Dialogs;
 
 public partial class HotkeyWindow : Window
 {
+    private readonly Func<IReadOnlyList<uint>, string?>? _validate;
+    private readonly List<uint> _pressedKeys = new();
+    private readonly List<uint> _gestureKeys = new();
     private bool _captureSpecial;
     private bool _awaitingConfirm;
-    private bool _prefixArmed;
-    private uint _prefixVirtualKey;
-    private uint _pendingModifiers;
-    private uint _pendingVirtualKey;
+    private bool _closing;
+    private List<uint>? _pendingKeys;
 
-    public HotkeyWindow(uint modifiers, uint virtualKey, bool numpadPrefix = false, uint prefixVirtualKey = 0)
+    public HotkeyWindow(HotkeyData? hotkey = null, Func<IReadOnlyList<uint>, string?>? validate = null)
     {
         InitializeComponent();
-        _prefixVirtualKey = prefixVirtualKey;
-        PreviewText.Text = virtualKey == 0
-            ? "не назначена"
-            : HotkeyFormatter.Format(modifiers, virtualKey, numpadPrefix, prefixVirtualKey);
+        _validate = validate;
+
+        var keys = hotkey?.GetEffectiveKeys() ?? new List<uint>();
+        PreviewText.Text = keys.Count == 0 ? "не назначена" : HotkeyFormatter.FormatKeys(keys);
         Loaded += (_, _) => Focus();
     }
 
@@ -29,27 +30,22 @@ public partial class HotkeyWindow : Window
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+        if (_closing) return;
+
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var virtualKey = HotkeyKeyUtil.Normalize((uint)KeyInterop.VirtualKeyFromKey(key));
 
         if (_captureSpecial)
         {
-            var specialVirtualKey = (uint)KeyInterop.VirtualKeyFromKey(key);
-            if (specialVirtualKey == 0) return;
-
-            Result = new HotkeyData
-            {
-                Modifiers = ToNativeModifiers(Keyboard.Modifiers),
-                VirtualKey = specialVirtualKey,
-            };
-            DialogResult = true;
-            Close();
+            if (virtualKey == 0) return;
+            var special = new HotkeyData { Keys = new List<uint> { virtualKey } };
+            TryAccept(special, isSpecial: true);
             return;
         }
 
         if (key == Key.Escape)
         {
-            DialogResult = false;
-            Close();
+            Cancel();
             return;
         }
 
@@ -61,93 +57,116 @@ public partial class HotkeyWindow : Window
             return;
         }
 
-        if (key == Key.Enter && _awaitingConfirm)
+        if (key == Key.Enter && _awaitingConfirm && _pendingKeys != null)
         {
-            Result = new HotkeyData { Modifiers = _pendingModifiers, VirtualKey = _pendingVirtualKey };
-            DialogResult = true;
-            Close();
+            var pending = new HotkeyData { Keys = _pendingKeys.ToList() };
+            if (TryAccept(pending, isSpecial: false))
+            {
+                _pendingKeys = null;
+                _awaitingConfirm = false;
+            }
             return;
         }
 
-        if (IsModifierKey(key))
-        {
-            var mods = ToNativeModifiers(Keyboard.Modifiers);
-            _awaitingConfirm = false;
-            _prefixArmed = false;
-            WarningText.Visibility = Visibility.Collapsed;
-            PreviewText.Text = mods == 0 ? "…" : HotkeyFormatter.Format(mods, 0) is { Length: > 0 } text ? text : "…";
-            HintText.Text = mods == 0 ? "нажмите комбинацию" : "теперь нажмите клавишу";
-            return;
-        }
-
-        var modifiers = ToNativeModifiers(Keyboard.Modifiers);
-        var virtualKey = (uint)KeyInterop.VirtualKeyFromKey(key);
         if (virtualKey == 0) return;
 
-        if ((modifiers & ~HotkeyManager.ModShift) == 0 && HotkeyManager.IsPrefixKey(virtualKey))
+        // Starting a new gesture after the bare-key confirmation prompt replaces it.
+        if (_awaitingConfirm)
         {
-            if (_prefixArmed && _prefixVirtualKey == virtualKey)
-            {
-                // Second press of the same prefix key assigns it as a standalone hotkey.
-                Result = new HotkeyData { Modifiers = 0, VirtualKey = virtualKey };
-                DialogResult = true;
-                Close();
-                return;
-            }
-
             _awaitingConfirm = false;
-            _prefixArmed = true;
-            _prefixVirtualKey = virtualKey;
-            var prefix = HotkeyFormatter.PrefixSymbol(virtualKey);
-            PreviewText.Text = "Num " + prefix + " + …";
-            HintText.Text = "теперь нажми Num 0–9; ещё раз " + prefix + " — назначить сам " + prefix;
-            WarningText.Text = $"Зажми Num {prefix} и нажми цифру нумпада — пад сработает только от {prefix} + Num.";
-            WarningText.Visibility = Visibility.Visible;
-            return;
+            _pendingKeys = null;
         }
 
-        if (_prefixArmed)
+        if (_pressedKeys.Count == 0)
         {
-            if (virtualKey is >= 0x60 and <= 0x69)
-            {
-                Result = new HotkeyData
-                {
-                    Modifiers = 0,
-                    VirtualKey = virtualKey,
-                    NumpadPrefix = true,
-                    NumpadPrefixVirtualKey = _prefixVirtualKey,
-                };
-                DialogResult = true;
-                Close();
-                return;
-            }
-
-            WarningText.Text = $"После Num {HotkeyFormatter.PrefixSymbol(_prefixVirtualKey)} нажми цифру нумпада 0–9.";
-            WarningText.Visibility = Visibility.Visible;
-            return;
+            _gestureKeys.Clear();
         }
 
-        // A bare letter or symbol becomes a global hotkey and shadows normal typing.
-        // Ask for Enter once instead of silently stealing the key everywhere.
-        if (modifiers == 0 && !IsSafeBareKey(key))
-        {
-            _awaitingConfirm = true;
-            _pendingModifiers = 0;
-            _pendingVirtualKey = virtualKey;
-            PreviewText.Text = HotkeyFormatter.Format(0, virtualKey);
-            HintText.Text = "Enter — подтвердить";
-            WarningText.Text = "Без модификатора клавиша будет перехватываться во всех приложениях. Enter — подтвердить, Esc — отмена.";
-            WarningText.Visibility = Visibility.Visible;
-            return;
-        }
+        if (e.IsRepeat) return;
+        if (!_pressedKeys.Contains(virtualKey)) _pressedKeys.Add(virtualKey);
+        if (!_gestureKeys.Contains(virtualKey)) _gestureKeys.Add(virtualKey);
 
-        Result = new HotkeyData { Modifiers = modifiers, VirtualKey = virtualKey };
-        DialogResult = true;
-        Close();
+        WarningText.Visibility = Visibility.Collapsed;
+        PreviewText.Text = HotkeyFormatter.FormatKeys(_gestureKeys);
+        HintText.Text = "отпусти клавиши, чтобы назначить";
     }
 
-    private static bool IsModifierKey(Key key) => key is Key.LeftCtrl or Key.RightCtrl
-        or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin;
+    private void OnPreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        if (_closing || _captureSpecial) return;
+
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var virtualKey = HotkeyKeyUtil.Normalize((uint)KeyInterop.VirtualKeyFromKey(key));
+        if (virtualKey == 0) return;
+
+        _pressedKeys.Remove(virtualKey);
+        if (_pressedKeys.Count > 0) return;
+        if (_gestureKeys.Count == 0) return;
+
+        var candidate = HotkeyKeyUtil.NormalizeList(_gestureKeys);
+        _gestureKeys.Clear();
+
+        if (candidate.Count == 0) return;
+        if (candidate.All(HotkeyKeyUtil.IsModifier))
+        {
+            ShowWarning("Добавь к модификатору ещё одну клавишу — одна Ctrl/Alt/Shift/Win не считается комбинацией.");
+            PreviewText.Text = "не назначена";
+            HintText.Text = "нажмите комбинацию";
+            return;
+        }
+
+        var text = HotkeyFormatter.FormatKeys(candidate);
+        if (candidate.Count == 1 && !IsSafeBareKey((Key)KeyInterop.KeyFromVirtualKey((int)candidate[0])))
+        {
+            _pendingKeys = candidate;
+            _awaitingConfirm = true;
+            PreviewText.Text = text;
+            HintText.Text = "Enter — подтвердить";
+            ShowWarning("Без модификатора эта клавиша будет перехватываться во всех приложениях. Enter — подтвердить, Esc — отмена.");
+            return;
+        }
+
+        TryAccept(new HotkeyData { Keys = candidate }, isSpecial: false);
+    }
+
+    private bool TryAccept(HotkeyData result, bool isSpecial)
+    {
+        var keys = result.GetEffectiveKeys();
+        if (keys.Count == 0) return false;
+
+        if (keys.All(HotkeyKeyUtil.IsModifier))
+        {
+            ShowWarning("Одни модификаторы не считаются комбинацией. Добавь обычную клавишу.");
+            return false;
+        }
+
+        var conflict = _validate?.Invoke(keys);
+        if (!string.IsNullOrWhiteSpace(conflict))
+        {
+            ShowWarning(conflict);
+            _awaitingConfirm = false;
+            _pendingKeys = null;
+            if (!isSpecial)
+            {
+                PreviewText.Text = HotkeyFormatter.FormatKeys(keys);
+                HintText.Text = "попробуй другую комбинацию";
+            }
+            return false;
+        }
+
+        Result = result;
+        _closing = true;
+        DialogResult = true;
+        Close();
+        return true;
+    }
+
+    private void ShowWarning(string message)
+    {
+        WarningText.Text = message;
+        WarningText.Visibility = Visibility.Visible;
+    }
 
     private static bool IsSafeBareKey(Key key)
     {
@@ -156,19 +175,17 @@ public partial class HotkeyWindow : Window
         return false;
     }
 
-    private static uint ToNativeModifiers(ModifierKeys modifiers)
+    private void Cancel()
     {
-        uint result = 0;
-        if (modifiers.HasFlag(ModifierKeys.Alt)) result |= HotkeyManager.ModAlt;
-        if (modifiers.HasFlag(ModifierKeys.Control)) result |= HotkeyManager.ModControl;
-        if (modifiers.HasFlag(ModifierKeys.Shift)) result |= HotkeyManager.ModShift;
-        if (modifiers.HasFlag(ModifierKeys.Windows)) result |= HotkeyManager.ModWin;
-        return result;
+        _closing = true;
+        DialogResult = false;
+        Close();
     }
 
     private void OnClear(object sender, RoutedEventArgs e)
     {
         Result = null;
+        _closing = true;
         DialogResult = true;
         Close();
     }
@@ -177,18 +194,15 @@ public partial class HotkeyWindow : Window
     {
         _captureSpecial = true;
         _awaitingConfirm = false;
-        _prefixArmed = false;
+        _pendingKeys = null;
+        _pressedKeys.Clear();
+        _gestureKeys.Clear();
         PreviewText.Text = "…";
         HintText.Text = "нажми служебную клавишу";
-        WarningText.Text = "Режим служебных клавиш: нажми Esc, Backspace, Delete, Enter или любую другую — она назначится. Для отмены нажми «Отмена».";
-        WarningText.Visibility = Visibility.Visible;
+        ShowWarning("Режим служебных клавиш: нажми Esc, Backspace, Delete, Enter или любую другую — она назначится. Для отмены нажми «Отмена».");
     }
 
-    private void OnCancel(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
-        Close();
-    }
+    private void OnCancel(object sender, RoutedEventArgs e) => Cancel();
 
     private void OnHeaderDrag(object sender, MouseButtonEventArgs e)
     {

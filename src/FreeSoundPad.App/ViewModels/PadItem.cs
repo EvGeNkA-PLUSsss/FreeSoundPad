@@ -28,6 +28,7 @@ public sealed partial class PadItem : ObservableObject
     [ObservableProperty] private uint _hotkeyVirtualKey;
     [ObservableProperty] private bool _hotkeyPrefix;
     [ObservableProperty] private uint _hotkeyPrefixVirtualKey;
+    private List<uint> _hotkeyKeys = new();
     [ObservableProperty] private bool _isPlaying;
     [ObservableProperty] private double _progress;
 
@@ -49,6 +50,9 @@ public sealed partial class PadItem : ObservableObject
         _hotkeyVirtualKey = data.HotkeyVirtualKey;
         _hotkeyPrefix = data.HotkeyPrefix;
         _hotkeyPrefixVirtualKey = data.HotkeyPrefixVirtualKey;
+        _hotkeyKeys = data.HotkeyKeys is { Count: > 0 }
+            ? HotkeyKeyUtil.NormalizeList(data.HotkeyKeys)
+            : HotkeyKeyUtil.FromLegacy(data.HotkeyModifiers, data.HotkeyVirtualKey, data.HotkeyPrefix, data.HotkeyPrefixVirtualKey);
         _durationSeconds = data.DurationSeconds;
         FilePath = ResolveFile(data.File);
         Peaks = data.Peaks is { Length: > 0 } ? data.Peaks : PlaceholderPeaks();
@@ -76,42 +80,55 @@ public sealed partial class PadItem : ObservableObject
 
     public string DurationText => AudioClipFormat(DurationSeconds);
 
-    public string HotkeyText => HotkeyFormatter.Format(HotkeyModifiers, HotkeyVirtualKey, HotkeyPrefix, HotkeyPrefixVirtualKey);
+    public List<uint> HotkeyKeys
+    {
+        get => _hotkeyKeys;
+        set
+        {
+            _hotkeyKeys = HotkeyKeyUtil.NormalizeList(value);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EffectiveHotkeyKeys));
+            OnPropertyChanged(nameof(HotkeyText));
+            OnPropertyChanged(nameof(HasHotkey));
+            OnPropertyChanged(nameof(ShortKey));
+        }
+    }
+
+    public IReadOnlyList<uint> EffectiveHotkeyKeys => HotkeyKeys is { Count: > 0 }
+        ? HotkeyKeys
+        : HotkeyKeyUtil.FromLegacy(HotkeyModifiers, HotkeyVirtualKey, HotkeyPrefix, HotkeyPrefixVirtualKey);
+
+    public HotkeyData Hotkey => new() { Keys = EffectiveHotkeyKeys.ToList() };
+
+    public string HotkeyText => HotkeyFormatter.FormatKeys(EffectiveHotkeyKeys);
 
     public string ShortKey
     {
         get
         {
-            var text = HotkeyText;
-            if (string.IsNullOrWhiteSpace(text)) return "";
-            if (text.StartsWith("Num ", StringComparison.Ordinal))
-            {
-                var separator = text.IndexOf(" + ", StringComparison.Ordinal);
-                if (separator > 4)
-                {
-                    var numPrefix = text[4..separator];
-                    var rest = text[(separator + 3)..].Replace("Num ", "", StringComparison.Ordinal);
-                    return numPrefix + " + " + rest;
-                }
-            }
+            var keys = EffectiveHotkeyKeys;
+            if (keys.Count == 0) return "";
 
-            var parts = text.Split(" + ", StringSplitOptions.RemoveEmptyEntries);
-            var key = parts[^1].Replace("Num ", "", StringComparison.Ordinal);
-            if (parts.Length <= 1) return key;
-
-            var prefix = parts[0] switch
-            {
-                "Ctrl" => "C",
-                "Alt" => "A",
-                "Shift" => "S",
-                "Win" => "W",
-                _ => "",
-            };
-            return prefix + key;
+            var parts = keys.Select(ShortName).ToArray();
+            return parts.Length <= 2 ? string.Concat(parts) : string.Join("+", parts);
         }
     }
 
-    public bool HasHotkey => HotkeyVirtualKey != 0;
+    private static string ShortName(uint virtualKey)
+    {
+        var key = HotkeyKeyUtil.Normalize(virtualKey);
+        return key switch
+        {
+            HotkeyKeyUtil.VkControl => "C",
+            HotkeyKeyUtil.VkAlt => "A",
+            HotkeyKeyUtil.VkShift => "S",
+            HotkeyKeyUtil.VkLeftWin => "W",
+            >= 0x60 and <= 0x69 => "N" + (key - 0x60),
+            _ => HotkeyFormatter.KeyName(key).Replace("Num ", "", StringComparison.Ordinal),
+        };
+    }
+
+    public bool HasHotkey => EffectiveHotkeyKeys.Count > 0;
 
     public string FavoriteGlyph => Favorite ? "\uE735" : "\uE734";
 
@@ -138,6 +155,7 @@ public sealed partial class PadItem : ObservableObject
 
     partial void OnHotkeyVirtualKeyChanged(uint value)
     {
+        OnPropertyChanged(nameof(EffectiveHotkeyKeys));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(HasHotkey));
         OnPropertyChanged(nameof(ShortKey));
@@ -145,18 +163,21 @@ public sealed partial class PadItem : ObservableObject
 
     partial void OnHotkeyModifiersChanged(uint value)
     {
+        OnPropertyChanged(nameof(EffectiveHotkeyKeys));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(ShortKey));
     }
 
     partial void OnHotkeyPrefixChanged(bool value)
     {
+        OnPropertyChanged(nameof(EffectiveHotkeyKeys));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(ShortKey));
     }
 
     partial void OnHotkeyPrefixVirtualKeyChanged(uint value)
     {
+        OnPropertyChanged(nameof(EffectiveHotkeyKeys));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(ShortKey));
     }
@@ -205,10 +226,11 @@ public sealed partial class PadItem : ObservableObject
         File = FilePath,
         Category = Category,
         Color = ColorHex,
-        HotkeyModifiers = HotkeyModifiers,
-        HotkeyVirtualKey = HotkeyVirtualKey,
-        HotkeyPrefix = HotkeyPrefix,
-        HotkeyPrefixVirtualKey = HotkeyPrefixVirtualKey,
+        HotkeyKeys = EffectiveHotkeyKeys.ToList(),
+        HotkeyModifiers = 0,
+        HotkeyVirtualKey = 0,
+        HotkeyPrefix = false,
+        HotkeyPrefixVirtualKey = 0,
         Volume = (float)Volume,
         Loop = Loop,
         Favorite = Favorite,

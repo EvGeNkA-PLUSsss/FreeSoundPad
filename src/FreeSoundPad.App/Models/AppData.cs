@@ -16,6 +16,8 @@ public sealed class PadData
     public string Color { get; set; } = "FF6B6B";
     public uint HotkeyModifiers { get; set; }
     public uint HotkeyVirtualKey { get; set; }
+    /// <summary>Arbitrary simultaneous key combination, for example A + B.</summary>
+    public List<uint> HotkeyKeys { get; set; } = new();
     /// <summary>Numpad digit hotkey fires only while Num * is held.</summary>
     public bool HotkeyPrefix { get; set; }
     /// <summary>Prefix key: 0x6A for Num *, 0x6F/0xBF for /.</summary>
@@ -40,12 +42,18 @@ public sealed class HotkeyData
 {
     public uint Modifiers { get; set; }
     public uint VirtualKey { get; set; }
+    /// <summary>Arbitrary simultaneous key combination. Takes precedence over the legacy fields.</summary>
+    public List<uint> Keys { get; set; } = new();
     /// <summary>Numpad digit requires the Num * prefix.</summary>
     public bool NumpadPrefix { get; set; }
     /// <summary>0x6A for Num *, 0x6F/0xBF for /.</summary>
     public uint NumpadPrefixVirtualKey { get; set; }
 
-    public bool IsSet => VirtualKey != 0;
+    public bool IsSet => GetEffectiveKeys().Count > 0;
+
+    public List<uint> GetEffectiveKeys() => Keys is { Count: > 0 }
+        ? HotkeyKeyUtil.NormalizeList(Keys)
+        : HotkeyKeyUtil.FromLegacy(Modifiers, VirtualKey, NumpadPrefix, NumpadPrefixVirtualKey);
 
     public static HotkeyData Empty => new();
 
@@ -53,6 +61,7 @@ public sealed class HotkeyData
     {
         Modifiers = Modifiers,
         VirtualKey = VirtualKey,
+        Keys = Keys?.ToList() ?? new List<uint>(),
         NumpadPrefix = NumpadPrefix,
         NumpadPrefixVirtualKey = NumpadPrefixVirtualKey,
     };

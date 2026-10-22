@@ -471,7 +471,12 @@ public sealed partial class MainViewModel
     /// <summary>
     /// Keep the site quiet locally while it is being captured. Session volume scales the
     /// process-loopback signal, so the capture is boosted digitally to compensate.
+    /// The local level is -80 dB rather than mute: muting the session also silences the
+    /// process-loopback capture, while a tiny non-zero level keeps the signal recoverable.
     /// </summary>
+    private const float QuietSessionVolume = 0.0001f;
+    private const float QuietCaptureBoost = 1f / QuietSessionVolume;
+
     private void ApplyBrowserAudioMode()
     {
         var quiet = !BrowserMuted
@@ -479,8 +484,8 @@ public sealed partial class MainViewModel
                     && BrowserCaptureEnabled
                     && _engine.BrowserCaptureActive
                     && (BrowserSend || (BrowserMonitor && CanMonitor));
-        _engine.BrowserCaptureBoost = quiet ? 100f : 1f;
-        AudioEngine.SetProcessSessionsVolume("msedgewebview2", quiet ? 0.01f : 1f);
+        _engine.BrowserCaptureBoost = quiet ? QuietCaptureBoost : 1f;
+        AudioEngine.SetProcessSessionsVolume("msedgewebview2", quiet ? QuietSessionVolume : 1f);
         _browserQuietApplied = quiet;
     }
 
@@ -490,8 +495,7 @@ public sealed partial class MainViewModel
                         && !OutputEndpointSilent
                         && BrowserCaptureEnabled
                         && _engine.BrowserCaptureActive
-                        && (BrowserSend || (BrowserMonitor && CanMonitor));
-        if (!wantQuiet)
+                        && (BrowserSend || (BrowserMonitor && CanMonitor));        if (!wantQuiet)
         {
             if (_browserQuietApplied) ApplyBrowserAudioMode();
             return;

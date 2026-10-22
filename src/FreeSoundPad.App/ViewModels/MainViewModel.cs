@@ -192,7 +192,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         get
         {
-            var assigned = Pads.Count(p => p.HotkeyVirtualKey != 0);
+            var assigned = Pads.Count(p => p.HasHotkey);
             return Pads.Count == 0
                 ? "Падов пока нет"
                 : $"Назначено {assigned} из {Pads.Count}";
@@ -996,7 +996,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var dialog = new HotkeyWindow(pad.HotkeyModifiers, pad.HotkeyVirtualKey, pad.HotkeyPrefix, pad.HotkeyPrefixVirtualKey)
+            var dialog = new HotkeyWindow(pad.Hotkey, keys => FindHotkeyConflict(keys, pad, null))
             {
                 Owner = _window,
             };
@@ -1005,6 +1005,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
             if (dialog.Result == null)
             {
+                pad.HotkeyKeys = new List<uint>();
                 pad.HotkeyModifiers = 0;
                 pad.HotkeyVirtualKey = 0;
                 pad.HotkeyPrefix = false;
@@ -1012,10 +1013,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
             else
             {
-                pad.HotkeyModifiers = dialog.Result.Modifiers;
-                pad.HotkeyVirtualKey = dialog.Result.VirtualKey;
-                pad.HotkeyPrefix = dialog.Result.NumpadPrefix;
-                pad.HotkeyPrefixVirtualKey = dialog.Result.NumpadPrefixVirtualKey;
+                pad.HotkeyKeys = dialog.Result.GetEffectiveKeys();
+                pad.HotkeyModifiers = 0;
+                pad.HotkeyVirtualKey = 0;
+                pad.HotkeyPrefix = false;
+                pad.HotkeyPrefixVirtualKey = 0;
             }
 
             Save();
@@ -1037,7 +1039,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var assigned = Pads.Count(p => p.HotkeyVirtualKey != 0);
+        var assigned = Pads.Count(p => p.HasHotkey);
         if (assigned == 0)
         {
             SetStatus("У падов уже нет биндов");
@@ -1054,6 +1056,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         foreach (var pad in Pads)
         {
+            pad.HotkeyKeys = new List<uint>();
             pad.HotkeyModifiers = 0;
             pad.HotkeyVirtualKey = 0;
             pad.HotkeyPrefix = false;
@@ -1608,27 +1611,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _hotkeyManager.UnregisterAll();
         var failures = new List<string>();
 
-        foreach (var pad in Pads.Where(p => p.HotkeyVirtualKey != 0))
+        foreach (var pad in Pads.Where(p => p.HasHotkey))
         {
             var captured = pad;
-            var requiresPrefix = (captured.HotkeyPrefix || _data.Settings.PadHotkeyPrefix)
-                                 && captured.HotkeyModifiers == 0
-                                 && captured.HotkeyVirtualKey is >= 0x60 and <= 0x69;
-
-            if (requiresPrefix)
-            {
-                var prefixKey = captured.HotkeyPrefixVirtualKey != 0
-                    ? captured.HotkeyPrefixVirtualKey
-                    : HotkeyManager.VkMultiply;
-
-                // Bare Num digits stay usable by games until the user clears all pad binds.
-                _hotkeyManager.RegisterPrefixAction(prefixKey, captured.HotkeyVirtualKey,
-                    () => Dispatch(() => PlayPad(captured)));
-                continue;
-            }
-
-            if (!_hotkeyManager.RegisterHooked(captured.HotkeyModifiers, captured.HotkeyVirtualKey,
-                    "pad:" + captured.Id, () => Dispatch(() => PlayPad(captured))))
+            var keys = captured.EffectiveHotkeyKeys;
+            if (!_hotkeyManager.RegisterHookedChord(keys, "pad:" + captured.Id,
+                    () => Dispatch(() => PlayPad(captured))))
             {
                 failures.Add($"{captured.HotkeyText} · {captured.Title}");
             }
@@ -1650,17 +1638,47 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!hotkey.IsSet || _hotkeyManager == null) return;
 
-        if (_hotkeyManager.IsHooked(hotkey.Modifiers, hotkey.VirtualKey))
+        var keys = hotkey.GetEffectiveKeys();
+        if (!_hotkeyManager.RegisterHookedChord(keys, description, () => Dispatch(action)))
         {
-            failures.Add($"{HotkeyFormatter.Format(hotkey.Modifiers, hotkey.VirtualKey)} · {description}");
-            return;
+            failures.Add($"{HotkeyFormatter.FormatKeys(keys)} · {description}");
+        }
+    }
+
+    private string? FindHotkeyConflict(IReadOnlyList<uint> keys, PadItem? exceptPad, HotkeyData? exceptCommand)
+    {
+        var requested = HotkeyKeyUtil.NormalizeList(keys);
+        if (requested.Count == 0) return null;
+
+        foreach (var pad in Pads)
+        {
+            if (ReferenceEquals(pad, exceptPad) || !pad.HasHotkey) continue;
+            if (HotkeyKeyUtil.IsDuplicateOrPrefix(requested, pad.EffectiveHotkeyKeys))
+            {
+                return $"Комбинация уже используется: «{pad.Title}» ({pad.HotkeyText}).";
+            }
         }
 
-        if (!_hotkeyManager.Register(hotkey.Modifiers, hotkey.VirtualKey, description, () => Dispatch(action))
-            && !_hotkeyManager.RegisterHooked(hotkey.Modifiers, hotkey.VirtualKey, description, () => Dispatch(action)))
+        var settings = _data.Settings;
+        foreach (var (hotkey, description) in new[]
+                 {
+                     (settings.StopAllHotkey, "Стоп всё"),
+                     (settings.MicToggleHotkey, "Микрофон"),
+                     (settings.BrowserSendHotkey, "Браузер"),
+                     (settings.MonitorHotkey, "Мониторинг"),
+                     (settings.OverlayHotkey, "Оверлей"),
+                     (settings.ShowWindowHotkey, "Показывать окно"),
+                 })
         {
-            failures.Add($"{HotkeyFormatter.Format(hotkey.Modifiers, hotkey.VirtualKey)} · {description}");
+            if (ReferenceEquals(hotkey, exceptCommand) || !hotkey.IsSet) continue;
+            var other = hotkey.GetEffectiveKeys();
+            if (HotkeyKeyUtil.IsDuplicateOrPrefix(requested, other))
+            {
+                return $"Комбинация уже используется: {description} ({HotkeyFormatter.FormatKeys(other)}).";
+            }
         }
+
+        return null;
     }
 
     [RelayCommand]
@@ -1680,16 +1698,29 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         if (hotkey == null) return;
 
-        var dialog = new HotkeyWindow(hotkey.Modifiers, hotkey.VirtualKey)
+        // Global hotkeys would consume the keys being captured in the dialog.
+        _hotkeyManager?.UnregisterAll();
+        try
         {
-            Owner = _settingsWindow ?? _window,
-        };
+            var dialog = new HotkeyWindow(hotkey.Clone(), keys => FindHotkeyConflict(keys, null, hotkey))
+            {
+                Owner = _settingsWindow ?? _window,
+            };
 
-        if (dialog.ShowDialog() != true) return;
-        hotkey.Modifiers = dialog.Result?.Modifiers ?? 0;
-        hotkey.VirtualKey = dialog.Result?.VirtualKey ?? 0;
-        Save();
-        RegisterHotkeys();
+            if (dialog.ShowDialog() != true) return;
+            hotkey.Keys = dialog.Result?.GetEffectiveKeys() ?? new List<uint>();
+            hotkey.Modifiers = 0;
+            hotkey.VirtualKey = 0;
+            hotkey.NumpadPrefix = false;
+            hotkey.NumpadPrefixVirtualKey = 0;
+            Save();
+            RegisterHotkeys();
+        }
+        finally
+        {
+            RegisterHotkeys();
+        }
+
         OnPropertyChanged(nameof(StopAllHotkeyText));
         OnPropertyChanged(nameof(MicHotkeyText));
         OnPropertyChanged(nameof(BrowserHotkeyText));
@@ -1698,12 +1729,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowWindowHotkeyText));
     }
 
-    public string StopAllHotkeyText => HotkeyFormatter.Format(_data.Settings.StopAllHotkey.Modifiers, _data.Settings.StopAllHotkey.VirtualKey);
-    public string MicHotkeyText => HotkeyFormatter.Format(_data.Settings.MicToggleHotkey.Modifiers, _data.Settings.MicToggleHotkey.VirtualKey);
-    public string BrowserHotkeyText => HotkeyFormatter.Format(_data.Settings.BrowserSendHotkey.Modifiers, _data.Settings.BrowserSendHotkey.VirtualKey);
-    public string MonitorHotkeyText => HotkeyFormatter.Format(_data.Settings.MonitorHotkey.Modifiers, _data.Settings.MonitorHotkey.VirtualKey);
-    public string OverlayHotkeyText => HotkeyFormatter.Format(_data.Settings.OverlayHotkey.Modifiers, _data.Settings.OverlayHotkey.VirtualKey);
-    public string ShowWindowHotkeyText => HotkeyFormatter.Format(_data.Settings.ShowWindowHotkey.Modifiers, _data.Settings.ShowWindowHotkey.VirtualKey);
+    public string StopAllHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.StopAllHotkey.GetEffectiveKeys());
+    public string MicHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.MicToggleHotkey.GetEffectiveKeys());
+    public string BrowserHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.BrowserSendHotkey.GetEffectiveKeys());
+    public string MonitorHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.MonitorHotkey.GetEffectiveKeys());
+    public string OverlayHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.OverlayHotkey.GetEffectiveKeys());
+    public string ShowWindowHotkeyText => HotkeyFormatter.FormatKeys(_data.Settings.ShowWindowHotkey.GetEffectiveKeys());
 
     // ------------------------------------------------------------------ tray
 

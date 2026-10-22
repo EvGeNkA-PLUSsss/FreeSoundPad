@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using FreeSoundPad.App.Models;
 
 namespace FreeSoundPad.App.Services;
 
@@ -13,21 +14,22 @@ public static class HotkeyFormatter
     public static string Format(uint modifiers, uint virtualKey, bool numpadPrefix = false, uint prefixVirtualKey = 0)
     {
         if (virtualKey == 0) return "";
+        return FormatKeys(HotkeyKeyUtil.FromLegacy(modifiers, virtualKey, numpadPrefix, prefixVirtualKey));
+    }
 
-        var parts = new List<string>();
-        if ((modifiers & HotkeyManager.ModControl) != 0) parts.Add("Ctrl");
-        if ((modifiers & HotkeyManager.ModAlt) != 0) parts.Add("Alt");
-        if ((modifiers & HotkeyManager.ModShift) != 0) parts.Add("Shift");
-        if ((modifiers & HotkeyManager.ModWin) != 0) parts.Add("Win");
-        parts.Add(KeyName(virtualKey));
-        var text = string.Join(" + ", parts);
+    public static string FormatKeys(IEnumerable<uint>? keys)
+    {
+        var parts = HotkeyKeyUtil.NormalizeList(keys);
+        if (parts.Count == 0) return "";
 
-        if ((numpadPrefix || PadPrefix) && modifiers == 0 && virtualKey is >= 0x60 and <= 0x69)
+        if (parts.Count == 2
+            && parts[0] is HotkeyManager.VkMultiply or HotkeyManager.VkDivide or HotkeyManager.VkOemQuestion
+            && parts[1] is >= 0x60 and <= 0x69)
         {
-            return "Num " + PrefixSymbol(prefixVirtualKey) + " + " + text;
+            return "Num " + PrefixSymbol(parts[0]) + " + " + KeyName(parts[1]);
         }
 
-        return text;
+        return string.Join(" + ", parts.Select(KeyName));
     }
 
     public static string PrefixSymbol(uint prefixVirtualKey) => prefixVirtualKey switch
@@ -38,7 +40,13 @@ public static class HotkeyFormatter
 
     public static string KeyName(uint virtualKey)
     {
-        var key = KeyInterop.KeyFromVirtualKey((int)virtualKey);
+        var normalized = HotkeyKeyUtil.Normalize(virtualKey);
+        if (normalized == HotkeyKeyUtil.VkControl) return "Ctrl";
+        if (normalized == HotkeyKeyUtil.VkAlt) return "Alt";
+        if (normalized == HotkeyKeyUtil.VkShift) return "Shift";
+        if (normalized == HotkeyKeyUtil.VkLeftWin) return "Win";
+
+        var key = KeyInterop.KeyFromVirtualKey((int)normalized);
         if (key >= Key.NumPad0 && key <= Key.NumPad9)
         {
             return "Num " + (key - Key.NumPad0);
@@ -99,6 +107,10 @@ public sealed class HotkeyManager : IDisposable
     private readonly Dictionary<int, string> _descriptions = new();
     private readonly Dictionary<long, Action> _prefixActions = new();
     private readonly Dictionary<long, Action> _hookedActions = new();
+    private readonly Dictionary<string, ChordBinding> _chordBindings = new();
+    private readonly HashSet<uint> _physicalDownKeys = new();
+    private readonly HashSet<string> _activeChords = new();
+    private readonly HashSet<uint> _chordSuppressedKeys = new();
     private readonly HashSet<uint> _heldPrefixKeys = new();
     private readonly HashSet<uint> _suppressedKeys = new();
     private readonly HashSet<uint> _hookedDownKeys = new();
@@ -129,6 +141,22 @@ public sealed class HotkeyManager : IDisposable
             var message = wParam.ToInt32();
             var isDown = message is WmKeyDown or WmSysKeyDown;
             var isUp = message is WmKeyUp or WmSysKeyUp;
+            var normalizedKey = HotkeyKeyUtil.Normalize(info.vkCode);
+
+            if (isUp)
+            {
+                _physicalDownKeys.Remove(normalizedKey);
+                ClearInactiveChords();
+            }
+            else if (isDown)
+            {
+                _physicalDownKeys.Add(normalizedKey);
+            }
+
+            if (isUp && _chordSuppressedKeys.Remove(normalizedKey))
+            {
+                return (IntPtr)1;
+            }
 
             if (IsPrefixKey(info.vkCode))
             {
@@ -166,6 +194,13 @@ public sealed class HotkeyManager : IDisposable
                         return (IntPtr)1;
                     }
                 }
+            }
+
+            // Arbitrary chords (A + B, Ctrl + Shift + F, * + Num 0) are matched
+            // against the complete set of currently held physical keys.
+            if (isDown && TryTriggerChord(normalizedKey))
+            {
+                return (IntPtr)1;
             }
 
             // Keys that RegisterHotKey refuses (PrintScreen, media, some layouts) are
@@ -295,8 +330,71 @@ public sealed class HotkeyManager : IDisposable
         return true;
     }
 
+    /// <summary>
+    /// Registers an arbitrary simultaneous key combination through the global hook.
+    /// The order of keys is irrelevant.
+    /// </summary>
+    public bool RegisterHookedChord(IEnumerable<uint> keys, string description, Action action)
+    {
+        var normalized = HotkeyKeyUtil.NormalizeList(keys);
+        if (normalized.Count == 0) return true;
+
+        var signature = HotkeyKeyUtil.Signature(normalized);
+        if (_chordBindings.ContainsKey(signature))
+        {
+            Log.Info($"Chord conflict: {HotkeyFormatter.FormatKeys(normalized)} ({description})");
+            return false;
+        }
+
+        _chordBindings[signature] = new ChordBinding(signature, normalized, action);
+        return true;
+    }
+
     public bool IsHooked(uint modifiers, uint virtualKey) =>
         _hookedActions.ContainsKey(HookActionKey(modifiers, virtualKey));
+
+    private bool TryTriggerChord(uint triggerKey)
+    {
+        if (_chordBindings.Count == 0) return false;
+
+        foreach (var binding in _chordBindings.Values
+                     .Where(b => !_activeChords.Contains(b.Signature))
+                     .OrderByDescending(b => b.Keys.Count))
+        {
+            if (!binding.Keys.All(_physicalDownKeys.Contains)) continue;
+
+            _activeChords.Add(binding.Signature);
+            _chordSuppressedKeys.Add(triggerKey);
+            try
+            {
+                binding.Action();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Chord hotkey action failed", ex);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void ClearInactiveChords()
+    {
+        if (_activeChords.Count == 0) return;
+
+        foreach (var signature in _activeChords.ToList())
+        {
+            if (!_chordBindings.TryGetValue(signature, out var binding) ||
+                !binding.Keys.All(_physicalDownKeys.Contains))
+            {
+                _activeChords.Remove(signature);
+            }
+        }
+    }
+
+    private sealed record ChordBinding(string Signature, List<uint> Keys, Action Action);
 
     public void UnregisterAll()
     {
@@ -316,6 +414,10 @@ public sealed class HotkeyManager : IDisposable
         _descriptions.Clear();
         _prefixActions.Clear();
         _hookedActions.Clear();
+        _chordBindings.Clear();
+        _physicalDownKeys.Clear();
+        _activeChords.Clear();
+        _chordSuppressedKeys.Clear();
         _heldPrefixKeys.Clear();
         _suppressedKeys.Clear();
         _hookedDownKeys.Clear();

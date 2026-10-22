@@ -6,7 +6,7 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize"
         FontFamily="{StaticResource UiFont}" Foreground="{StaticResource TextBrush}"
-        PreviewKeyDown="OnPreviewKeyDown">
+        PreviewKeyDown="OnPreviewKeyDown" PreviewKeyUp="OnPreviewKeyUp">
     <Border Margin="18" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource Line2Brush}"
             BorderThickness="1" CornerRadius="16" Padding="22">
         <Border.Effect>
@@ -15,7 +15,7 @@
         <StackPanel>
             <TextBlock Text="Горячая клавиша" FontFamily="{StaticResource DisplayFont}" FontSize="16" FontWeight="SemiBold"
                        MouseLeftButtonDown="OnHeaderDrag" />
-            <TextBlock Text="Любая клавиша. Esc — отмена, Backspace — снять. Для * + Num 0–9 или / + Num 0–9 нажми * или /, затем цифру. Без модификатора нужно подтвердить Enter."
+            <TextBlock Text="Нажми и удерживай любые клавиши — подойдёт A + B, Ctrl + Alt + X, * + Num 0. Отпусти все клавиши, чтобы назначить. Esc — отмена, Backspace или Delete — снять. Служебные — для назначения самих Esc, Backspace и Delete."
                        Style="{StaticResource SubtleText}" TextWrapping="Wrap" Margin="0,6,0,16" />
             <Border x:Name="CaptureBorder" Background="{StaticResource Panel2Brush}" BorderBrush="{StaticResource MintBorderBrush}"
                     BorderThickness="1" CornerRadius="12" Height="84">
